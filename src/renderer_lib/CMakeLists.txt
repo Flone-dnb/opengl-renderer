@@ -65,6 +65,32 @@ enable_clang_tidy(${CMAKE_CURRENT_LIST_DIR}/../../.clang-tidy)
 #                                       DEPENDENCIES
 # -------------------------------------------------------------------------------------------------
 
+# Add "OpenGL".
+find_package(OpenGL REQUIRED)
+if (OPENGL_FOUND)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL)
+else (OPENGL_FOUND)
+    message(FATAL_ERROR "unable to find OpenGL")
+endif()
+
+# Add "GLSL shader includer".
+message(STATUS "${PROJECT_NAME}: adding external dependency \"GLSL-Shader-Includer\"...")
+set(GLSL_SHADER_INCLUDER_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(GLSL_SHADER_INCLUDER_ENABLE_DOXYGEN OFF CACHE BOOL "" FORCE)
+add_subdirectory(${RELATIVE_EXT_PATH}/GLSL-Shader-Includes ${DEPENDENCY_BUILD_DIR_NAME}/GLSL-Shader-Includes SYSTEM)
+target_link_libraries(${PROJECT_NAME} PUBLIC GlslShaderIncluderLib)
+
+# Add "GLAD".
+message(STATUS "${PROJECT_NAME}: adding external dependency \"GLAD\"...")
+set(GLAD_TARGET_NAME GLAD)
+add_library(${GLAD_TARGET_NAME} STATIC
+    ${RELATIVE_EXT_PATH}/glad/src/glad.c
+)
+target_include_directories(${GLAD_TARGET_NAME} PUBLIC ${RELATIVE_EXT_PATH}/glad/include)
+set_target_properties(${GLAD_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})
+add_dependencies(${PROJECT_NAME} ${GLAD_TARGET_NAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${GLAD_TARGET_NAME})
+
 # Add "GLM".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLM\"...")
 add_subdirectory(${RELATIVE_EXT_PATH}/glm ${DEPENDENCY_BUILD_DIR_NAME}/glm SYSTEM)

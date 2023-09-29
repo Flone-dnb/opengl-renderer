@@ -4,3 +4,6 @@
 [submodule "ext/glfw"]
 	path = ext/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "ext/GLSL-Shader-Includes"]
+	path = ext/GLSL-Shader-Includes
+	url = https://github.com/Flone-dnb/GLSL-Shader-Includes.git

@@ -5,6 +5,7 @@
 #include <string>
 
 // External.
+#include "glad/glad.h" // include GLAD before GLFW
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 #undef MessageBox
@@ -41,5 +42,10 @@ private:
         if (glfwInit() != GLFW_TRUE) {
             throw std::runtime_error("failed to initialize GLFW");
         }
+
+        // Set OpenGL hints.
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // NOLINT
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6); // NOLINT
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     }
 };
