@@ -67,6 +67,12 @@ private:
     void prepareVertexBuffer();
 
     /**
+     * Creates an index buffer, fills it and assigns it to the OpenGL context. The resulting buffer object ID
+     * is assigned to @ref iIndexBufferObjectId.
+     */
+    void prepareIndexBuffer();
+
+    /**
      * Creates and compiles shaders into a shader program, assigns it to the OpenGL context and stores its ID
      * in @ref iShaderProgramId.
      */
@@ -76,11 +82,20 @@ private:
     static void setVertexAttributes();
 
     /** Vertices that will be copied to @ref iVertexBufferObjectId. */
-    std::array<glm::vec3, 3> vVertices = {
-        glm::vec3(-0.5F, -0.5F, 0.0F), glm::vec3(0.5F, -0.5F, 0.0F), glm::vec3(0.0F, 0.5F, 0.0F)}; // NOLINT
+    std::array<glm::vec3, 4> vVertices = {
+        glm::vec3(0.5F, 0.5F, 0.0F),   // NOLINT
+        glm::vec3(0.5F, -0.5F, 0.0F),  // NOLINT
+        glm::vec3(-0.5F, -0.5F, 0.0F), // NOLINT
+        glm::vec3(-0.5F, 0.5F, 0.0F)}; // NOLINT
 
-    /** ID of the vertex buffer object that stores vertices. */
+    /** Indices to @ref vVertices. */
+    std::array<unsigned int, 6> vIndices = {0, 1, 3, 1, 2, 3}; // NOLINT
+
+    /** ID of the vertex buffer object that stores @ref vVertices. */
     unsigned int iVertexBufferObjectId = 0;
+
+    /** ID of the index buffer object that stores @ref vIndices. */
+    unsigned int iIndexBufferObjectId = 0;
 
     /** ID of the vertex array object that references a vertex buffer object and its attributes. */
     unsigned int iVertexArrayObjectId = 0;

@@ -54,6 +54,9 @@ void Application::initOpenGl() {
     // Set vertex buffer to context.
     prepareVertexBuffer();
 
+    // Set index buffer to context.
+    prepareIndexBuffer();
+
     // Set shaders to context.
     prepareShaders();
 }
@@ -74,14 +77,18 @@ void Application::drawNextFrame() const {
     // Clear color buffer.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Specify which shaders we will use.
+    // Set shaders.
     glUseProgram(iShaderProgramId);
 
-    // Specify vertex array object.
+    // Set vertex buffer.
     glBindVertexArray(iVertexArrayObjectId);
 
-    // Draw using the specified vertex array object.
-    glDrawArrays(GL_TRIANGLES, 0, vVertices.size());
+    // Set index buffer.
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iIndexBufferObjectId);
+
+    // Submit a draw command.
+    static_assert(sizeof(vIndices[0]) == sizeof(unsigned int), "change index format below");
+    glDrawElements(GL_TRIANGLES, vIndices.size(), GL_UNSIGNED_INT, 0);
 }
 
 void Application::prepareVertexBuffer() {
@@ -103,6 +110,21 @@ void Application::prepareVertexBuffer() {
         GL_ARRAY_BUFFER,
         vVertices.size() * sizeof(vVertices[0]),
         vVertices.data(),
+        GL_STATIC_DRAW); // `STATIC` because the data will not be changed
+}
+
+void Application::prepareIndexBuffer() {
+    // Create element buffer object.
+    glGenBuffers(1, &iIndexBufferObjectId);
+
+    // Set our buffer to "element array" buffer target in OpenGL context.
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iIndexBufferObjectId);
+
+    // Copy vertices to the buffer.
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        vIndices.size() * sizeof(vIndices[0]),
+        vIndices.data(),
         GL_STATIC_DRAW); // `STATIC` because the data will not be changed
 }
 
