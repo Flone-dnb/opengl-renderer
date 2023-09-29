@@ -3,10 +3,12 @@
 // Standard.
 #include <array>
 #include <string>
+#include <vector>
 #include <filesystem>
 
 // Custom.
 #include "GLMath.hpp"
+#include "Mesh.h"
 
 class GLFWwindow;
 
@@ -57,20 +59,11 @@ private:
     /** Processes window messages and does the rendering. */
     void mainLoop();
 
+    /** Prepares a scene with meshes to draw (fills @ref vMeshesToDraw).  */
+    void prepareScene();
+
     /** Draws next frame. */
     void drawNextFrame() const;
-
-    /**
-     * Creates a vertex buffer, fills it and assigns it to the OpenGL context. The resulting buffer object ID
-     * is assigned to @ref iVertexBufferObjectId.
-     */
-    void prepareVertexBuffer();
-
-    /**
-     * Creates an index buffer, fills it and assigns it to the OpenGL context. The resulting buffer object ID
-     * is assigned to @ref iIndexBufferObjectId.
-     */
-    void prepareIndexBuffer();
 
     /**
      * Creates and compiles shaders into a shader program, assigns it to the OpenGL context and stores its ID
@@ -78,27 +71,8 @@ private:
      */
     void prepareShaders();
 
-    /** Describes to OpenGL how data in @ref vVertices should be interpreted. */
-    static void setVertexAttributes();
-
-    /** Vertices that will be copied to @ref iVertexBufferObjectId. */
-    std::array<glm::vec3, 4> vVertices = {
-        glm::vec3(0.5F, 0.5F, 0.0F),   // NOLINT
-        glm::vec3(0.5F, -0.5F, 0.0F),  // NOLINT
-        glm::vec3(-0.5F, -0.5F, 0.0F), // NOLINT
-        glm::vec3(-0.5F, 0.5F, 0.0F)}; // NOLINT
-
-    /** Indices to @ref vVertices. */
-    std::array<unsigned int, 6> vIndices = {0, 1, 3, 1, 2, 3}; // NOLINT
-
-    /** ID of the vertex buffer object that stores @ref vVertices. */
-    unsigned int iVertexBufferObjectId = 0;
-
-    /** ID of the index buffer object that stores @ref vIndices. */
-    unsigned int iIndexBufferObjectId = 0;
-
-    /** ID of the vertex array object that references a vertex buffer object and its attributes. */
-    unsigned int iVertexArrayObjectId = 0;
+    /** Stores meshes to draw. */
+    std::vector<std::unique_ptr<Mesh>> vMeshesToDraw;
 
     /** ID of the shader program that contains all other shaders attached to it. */
     unsigned int iShaderProgramId = 0;

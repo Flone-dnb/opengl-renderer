@@ -9,9 +9,27 @@
 #include "GLFW.hpp"
 #include "ShaderIncluder.h"
 
+void GLAPIENTRY opengGlMessageCallback(
+    GLenum source,
+    GLenum type,
+    GLuint id, // NOLINT
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,   // NOLINT
+    const void* userParam) { // NOLINT
+    fprintf(
+        stderr,
+        "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+        type,
+        severity,
+        message);
+}
+
 void Application::run() {
     initWindow();
     initOpenGl();
+    prepareScene();
     mainLoop();
 }
 
@@ -48,14 +66,14 @@ void Application::initWindow() {
 }
 
 void Application::initOpenGl() {
+#if defined(DEBUG)
+    // Enable debug output.
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(opengGlMessageCallback, 0);
+#endif
+
     // Specify clear color.
     glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
-
-    // Set vertex buffer to context.
-    prepareVertexBuffer();
-
-    // Set index buffer to context.
-    prepareIndexBuffer();
 
     // Set shaders to context.
     prepareShaders();
@@ -73,6 +91,19 @@ void Application::mainLoop() {
     }
 }
 
+void Application::prepareScene() {
+    // NOLINTBEGIN(readability-magic-numbers)
+
+    vMeshesToDraw.push_back(Mesh::create(
+        {glm::vec3(0.5F, 0.5F, 0.0F),
+         glm::vec3(0.5F, -0.5F, 0.0F),
+         glm::vec3(-0.5F, -0.5F, 0.0F),
+         glm::vec3(-0.5F, 0.5F, 0.0F)},
+        {0, 1, 3, 1, 2, 3}));
+
+    // NOLINTEND(readability-magic-numbers)
+}
+
 void Application::drawNextFrame() const {
     // Clear color buffer.
     glClear(GL_COLOR_BUFFER_BIT);
@@ -80,52 +111,13 @@ void Application::drawNextFrame() const {
     // Set shaders.
     glUseProgram(iShaderProgramId);
 
-    // Set vertex buffer.
-    glBindVertexArray(iVertexArrayObjectId);
+    for (const auto& mesh : vMeshesToDraw) {
+        // Set vertex array object.
+        glBindVertexArray(mesh->iVertexArrayObjectId);
 
-    // Set index buffer.
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iIndexBufferObjectId);
-
-    // Submit a draw command.
-    static_assert(sizeof(vIndices[0]) == sizeof(unsigned int), "change index format below");
-    glDrawElements(GL_TRIANGLES, vIndices.size(), GL_UNSIGNED_INT, 0);
-}
-
-void Application::prepareVertexBuffer() {
-    // Create vertex buffer object (VBO).
-    glGenBuffers(1, &iVertexBufferObjectId);
-
-    // Create vertex array object (VAO).
-    glGenVertexArrays(1, &iVertexArrayObjectId);
-
-    // Bind our vertex array object to the OpenGL context.
-    glBindVertexArray(iVertexArrayObjectId);
-
-    // Set our buffer to "array" buffer target in OpenGL context
-    // (i.e. attach a VBO to our VAO).
-    glBindBuffer(GL_ARRAY_BUFFER, iVertexBufferObjectId);
-
-    // Copy vertices to the buffer.
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        vVertices.size() * sizeof(vVertices[0]),
-        vVertices.data(),
-        GL_STATIC_DRAW); // `STATIC` because the data will not be changed
-}
-
-void Application::prepareIndexBuffer() {
-    // Create element buffer object.
-    glGenBuffers(1, &iIndexBufferObjectId);
-
-    // Set our buffer to "element array" buffer target in OpenGL context.
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iIndexBufferObjectId);
-
-    // Copy vertices to the buffer.
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        vIndices.size() * sizeof(vIndices[0]),
-        vIndices.data(),
-        GL_STATIC_DRAW); // `STATIC` because the data will not be changed
+        // Submit a draw command.
+        glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, 0);
+    }
 }
 
 void Application::prepareShaders() {
@@ -155,21 +147,6 @@ void Application::prepareShaders() {
     // Delete shaders since we don't need them anymore.
     glDeleteShader(iVertexShaderId);
     glDeleteShader(iFragmentShaderId);
-
-    // Specify vertex attributes.
-    setVertexAttributes();
-}
-
-void Application::setVertexAttributes() {
-    // Specify position.
-    glVertexAttribPointer(
-        0,                 // attribute index (layout location)
-        3,                 // number of components
-        GL_FLOAT,          // type of component
-        GL_FALSE,          // whether data should be normalized or not
-        sizeof(glm::vec3), // stride (size in bytes between elements)
-        0);                // beginning offset
-    glEnableVertexAttribArray(0);
 }
 
 void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWidth, int iHeight) {

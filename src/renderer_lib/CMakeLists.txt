@@ -21,6 +21,8 @@ include(${RELATIVE_CMAKE_HELPERS_PATH}/utils.cmake)
 set(PROJECT_SOURCES
     src/Application.h
     src/Application.cpp
+    src/Mesh.h
+    src/Mesh.cpp
     src/GLMath.hpp
     src/GLFW.hpp
     # add your .h/.cpp files here
