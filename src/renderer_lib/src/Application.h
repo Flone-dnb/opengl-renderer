@@ -15,6 +15,17 @@ class GLFWwindow;
 /** Basic OpenGL application. */
 class Application {
 public:
+    /**
+     * Loads the specified image and returns its ID.
+     *
+     * @remark Expects that OpenGL is initialized.
+     *
+     * @param pathToImage
+     *
+     * @return Loaded image ID.
+     */
+    static unsigned int loadTexture(const std::filesystem::path& pathToImage);
+
     /** Runs the application. */
     void run();
 

@@ -9,6 +9,10 @@
 #include "GLFW.hpp"
 #include "ShaderIncluder.h"
 
+// External.
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
 void GLAPIENTRY opengGlMessageCallback(
     GLenum source,
     GLenum type,
@@ -24,6 +28,45 @@ void GLAPIENTRY opengGlMessageCallback(
         type,
         severity,
         message);
+}
+
+unsigned int Application::loadTexture(const std::filesystem::path& pathToImage) {
+    // Make sure the specified path exists.
+    if (!std::filesystem::exists(pathToImage)) [[unlikely]] {
+        throw std::runtime_error(
+            std::format("the specified path \"{}\" does not exists", pathToImage.string()));
+    }
+
+    // Prepare image format.
+    const auto iStbiFormat = STBI_rgb;
+    const auto iGlFormat = GL_RGB;
+
+    // Load image pixels.
+    int iWidth = 0;
+    int iHeight = 0;
+    int iChannels = 0;
+    const auto pPixels = stbi_load(pathToImage.c_str(), &iWidth, &iHeight, &iChannels, iStbiFormat);
+    if (pPixels == nullptr) [[unlikely]] {
+        throw std::runtime_error(std::format("failed to load image from path \"{}\"", pathToImage.string()));
+    }
+
+    // Create a new texture object.
+    unsigned int iTextureId = 0;
+    glGenTextures(1, &iTextureId);
+
+    // Bind texture to texture target to update its data.
+    glBindTexture(GL_TEXTURE_2D, iTextureId);
+
+    // Copy pixels to the texture.
+    glTexImage2D(GL_TEXTURE_2D, 0, iGlFormat, iWidth, iHeight, 0, iGlFormat, GL_UNSIGNED_BYTE, pPixels);
+
+    // Generate mipmaps.
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // Free pixels.
+    stbi_image_free(pPixels);
+
+    return iTextureId;
 }
 
 void Application::run() {
@@ -77,6 +120,16 @@ void Application::initOpenGl() {
 
     // Set shaders to context.
     prepareShaders();
+
+    // Set texture wrapping.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Set texture filtering.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR); // no need to set `MIPMAP` option since magnification does not use mipmaps
 }
 
 void Application::mainLoop() {
@@ -95,10 +148,10 @@ void Application::prepareScene() {
     // NOLINTBEGIN(readability-magic-numbers)
 
     vMeshesToDraw.push_back(Mesh::create(
-        {glm::vec3(0.5F, 0.5F, 0.0F),
-         glm::vec3(0.5F, -0.5F, 0.0F),
-         glm::vec3(-0.5F, -0.5F, 0.0F),
-         glm::vec3(-0.5F, 0.5F, 0.0F)},
+        {{glm::vec3(0.5F, 0.5F, 0.0F), glm::vec2(1.0F, 1.0F)},
+         {glm::vec3(0.5F, -0.5F, 0.0F), glm::vec2(1.0F, 0.0F)},
+         {glm::vec3(-0.5F, -0.5F, 0.0F), glm::vec2(0.0F, 0.0F)},
+         {glm::vec3(-0.5F, 0.5F, 0.0F), glm::vec2(0.0F, 1.0F)}},
         {0, 1, 3, 1, 2, 3}));
 
     // NOLINTEND(readability-magic-numbers)
@@ -114,6 +167,9 @@ void Application::drawNextFrame() const {
     for (const auto& mesh : vMeshesToDraw) {
         // Set vertex array object.
         glBindVertexArray(mesh->iVertexArrayObjectId);
+
+        // Set diffuse texture.
+        glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
 
         // Submit a draw command.
         glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, 0);

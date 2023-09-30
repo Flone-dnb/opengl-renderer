@@ -2,6 +2,33 @@
 
 // Custom.
 #include "GLFW.hpp"
+#include "Application.h"
+
+void Vertex::setVertexAttributes() {
+    // Prepare offsets of fields.
+    const auto iPositionOffset = offsetof(Vertex, position);
+    const auto iUvOffset = offsetof(Vertex, uv);
+
+    // Specify position.
+    glVertexAttribPointer(
+        0,                 // attribute index (layout location)
+        3,                 // number of components
+        GL_FLOAT,          // type of component
+        GL_FALSE,          // whether data should be normalized or not
+        sizeof(Vertex),    // stride (size in bytes between elements)
+        &iPositionOffset); // beginning offset
+    glEnableVertexAttribArray(0);
+
+    // Specify UV.
+    glVertexAttribPointer(
+        1,              // attribute index (layout location)
+        2,              // number of components
+        GL_FLOAT,       // type of component
+        GL_FALSE,       // whether data should be normalized or not
+        sizeof(Vertex), // stride (size in bytes between elements)
+        &iUvOffset);    // beginning offset
+    glEnableVertexAttribArray(1);
+}
 
 Mesh::~Mesh() {
     // Don't need to wait for the GPU to finish using this data because:
@@ -17,7 +44,7 @@ Mesh::~Mesh() {
     glDeleteBuffers(1, &iIndexBufferObjectId);
 }
 
-std::unique_ptr<Mesh> Mesh::create(std::vector<glm::vec3>&& vVertices, std::vector<unsigned int>&& vIndices) {
+std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<unsigned int>&& vIndices) {
     static_assert(sizeof(vIndices[0]) == sizeof(unsigned int), "change index format in the `draw` command");
 
     // Prepare the resulting mesh.
@@ -28,24 +55,12 @@ std::unique_ptr<Mesh> Mesh::create(std::vector<glm::vec3>&& vVertices, std::vect
     pMesh->prepareIndexBuffer(std::move(vIndices));
 
     // Describe vertex attributes.
-    setVertexAttributes();
+    Vertex::setVertexAttributes();
 
     return pMesh;
 }
 
-void Mesh::setVertexAttributes() {
-    // Specify position.
-    glVertexAttribPointer(
-        0,                 // attribute index (layout location)
-        3,                 // number of components
-        GL_FLOAT,          // type of component
-        GL_FALSE,          // whether data should be normalized or not
-        sizeof(glm::vec3), // stride (size in bytes between elements)
-        0);                // beginning offset
-    glEnableVertexAttribArray(0);
-}
-
-void Mesh::prepareVertexBuffer(std::vector<glm::vec3>&& vVertices) {
+void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {
     // Create vertex buffer object (VBO).
     glGenBuffers(1, &iVertexBufferObjectId);
 
