@@ -1,5 +1,8 @@
 #include "Mesh.h"
 
+// Standard.
+#include <format>
+
 // Custom.
 #include "GLFW.hpp"
 #include "Application.h"
@@ -47,7 +50,7 @@ Mesh::~Mesh() {
     glDeleteTextures(1, &iDiffuseTextureId);
 
 #if defined(DEBUG)
-    static_assert(sizeof(Mesh) == 20, "add new resources to be deleted"); // NOLINT
+    static_assert(sizeof(Mesh) == 84, "add new resources to be deleted"); // NOLINT
 #endif
 }
 
@@ -65,6 +68,14 @@ std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<
     Vertex::setVertexAttributes();
 
     return pMesh;
+}
+
+void Mesh::setDiffuseTexture(const std::filesystem::__cxx11::path& pathToImageFile) {
+    // Delete previous texture.
+    glDeleteTextures(1, &iDiffuseTextureId);
+
+    // Create new texture.
+    iDiffuseTextureId = Application::loadTexture(pathToImageFile);
 }
 
 void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {

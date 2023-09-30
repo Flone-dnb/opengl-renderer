@@ -2,6 +2,7 @@
 
 // Standard.
 #include <vector>
+#include <filesystem>
 #include <memory>
 
 // Custom.
@@ -37,6 +38,16 @@ struct Mesh {
      */
     static std::unique_ptr<Mesh>
     create(std::vector<Vertex>&& vVertices, std::vector<unsigned int>&& vIndices);
+
+    /**
+     * Assigns the specified diffuse texture to be used.
+     *
+     * @param pathToImageFile Path to the image file to use.
+     */
+    void setDiffuseTexture(const std::filesystem::path& pathToImageFile);
+
+    /** Matrix that transforms data (such as positions) from model space to world space. */
+    glm::mat4x4 worldMatrix = glm::identity<glm::mat4x4>();
 
     /** ID of the vertex array object that references a vertex buffer object and its attributes. */
     unsigned int iVertexArrayObjectId = 0;

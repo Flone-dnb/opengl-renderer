@@ -7,3 +7,6 @@
 [submodule "ext/GLSL-Shader-Includes"]
 	path = ext/GLSL-Shader-Includes
 	url = https://github.com/Flone-dnb/GLSL-Shader-Includes.git
+[submodule "ext/tinygltf"]
+	path = ext/tinygltf
+	url = https://github.com/syoyo/tinygltf.git

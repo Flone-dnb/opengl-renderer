@@ -85,9 +85,24 @@ private:
     /** Stores meshes to draw. */
     std::vector<std::unique_ptr<Mesh>> vMeshesToDraw;
 
+    /** Matrix that transforms data (such as positions) from world space to view space. */
+    glm::mat4x4 viewMatrix = glm::identity<glm::mat4x4>();
+
+    /** Matrix that transforms data (such as positions) from view space to projection (clip) space. */
+    glm::mat4x4 projectionMatrix = glm::identity<glm::mat4x4>();
+
     /** ID of the shader program that contains all other shaders attached to it. */
     unsigned int iShaderProgramId = 0;
 
     /** GLFW window. */
     GLFWwindow* pGLFWWindow = nullptr;
+
+    /** Vertical field of view of the camera. */
+    static constexpr float verticalFov = 90.0F; // NOLINT
+
+    /** Z coordinate in the camera space of the near clip plane. */
+    static constexpr float nearClipPlaneZ = 0.3F;
+
+    /** Z coordinate in the camera space of the far clip plane. */
+    static constexpr float farClipPlaneZ = 1000.0F;
 };

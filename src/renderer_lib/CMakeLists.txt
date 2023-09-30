@@ -23,6 +23,8 @@ set(PROJECT_SOURCES
     src/Application.cpp
     src/Mesh.h
     src/Mesh.cpp
+    src/MeshImporter.h
+    src/MeshImporter.cpp
     src/GLMath.hpp
     src/GLFW.hpp
     # add your .h/.cpp files here
@@ -92,6 +94,16 @@ target_include_directories(${GLAD_TARGET_NAME} PUBLIC ${RELATIVE_EXT_PATH}/glad/
 set_target_properties(${GLAD_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 add_dependencies(${PROJECT_NAME} ${GLAD_TARGET_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${GLAD_TARGET_NAME})
+
+# External: tinygltf
+message(STATUS "${PROJECT_NAME}: adding external dependency \"tinygltf\"...")
+set(TINYGLTF_HEADER_ONLY ON CACHE BOOL "" FORCE)
+set(TINYGLTF_INSTALL OFF CACHE BOOL "" FORCE)
+set(TINYGLTF_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(${RELATIVE_EXT_PATH}/tinygltf ${DEPENDENCY_BUILD_DIR_NAME}/tinygltf SYSTEM)
+target_link_libraries(${PROJECT_NAME} PUBLIC tinygltf)
+set_target_properties(tinygltf PROPERTIES FOLDER ${EXTERNAL_FOLDER})
+add_dependencies(${PROJECT_NAME} tinygltf)
 
 # Add "GLM".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLM\"...")

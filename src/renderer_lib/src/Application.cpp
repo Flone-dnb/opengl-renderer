@@ -8,6 +8,7 @@
 // Custom.
 #include "GLFW.hpp"
 #include "ShaderIncluder.h"
+#include "MeshImporter.h"
 
 // External.
 #define STB_IMAGE_IMPLEMENTATION
@@ -130,6 +131,9 @@ void Application::initWindow() {
         throw std::runtime_error("failed to create window");
     }
 
+    // Add Application pointer.
+    glfwSetWindowUserPointer(pGLFWWindow, this);
+
     // Make window's OpenGL context to be the current one for this thread.
     glfwMakeContextCurrent(pGLFWWindow);
 
@@ -141,6 +145,13 @@ void Application::initWindow() {
 
     // Specify the initial window size to OpenGL.
     glViewport(0, 0, iWindowWidth, iWindowHeight);
+
+    // Update projection matrix.
+    projectionMatrix = glm::perspective(
+        glm::radians(verticalFov),
+        static_cast<float>(iWindowWidth) / iWindowHeight,
+        nearClipPlaneZ,
+        farClipPlaneZ);
 
     // Bind to framebuffer size change event.
     glfwSetFramebufferSizeCallback(pGLFWWindow, Application::glfwFramebufferResizeCallback);
@@ -158,6 +169,9 @@ void Application::initOpenGl() {
 
     // Specify clear color.
     glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+
+    // Enable depth testing.
+    glEnable(GL_DEPTH_TEST);
 
     // Set shaders to context.
     prepareShaders();
@@ -186,26 +200,39 @@ void Application::mainLoop() {
 }
 
 void Application::prepareScene() {
-    // NOLINTBEGIN(readability-magic-numbers)
+    // Import meshes from file.
+    auto vImportedMeshes = MeshImporter::importMesh("res/mesh.glb");
+    for (auto& pMesh : vImportedMeshes) {
+        vMeshesToDraw.push_back(std::move(pMesh));
+    }
 
-    vMeshesToDraw.push_back(Mesh::create(
-        {{glm::vec3(0.5F, 0.5F, 0.0F), glm::vec2(1.0F, 1.0F)},
-         {glm::vec3(0.5F, -0.5F, 0.0F), glm::vec2(1.0F, 0.0F)},
-         {glm::vec3(-0.5F, -0.5F, 0.0F), glm::vec2(0.0F, 0.0F)},
-         {glm::vec3(-0.5F, 0.5F, 0.0F), glm::vec2(0.0F, 1.0F)}},
-        {0, 1, 3, 1, 2, 3}));
-
-    // NOLINTEND(readability-magic-numbers)
+    // Setup camera.
+    viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0F, 0.0F, -5.0F)); // NOLINT
 }
 
 void Application::drawNextFrame() const {
-    // Clear color buffer.
-    glClear(GL_COLOR_BUFFER_BIT);
+    // Clear color and depth buffers.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set shaders.
     glUseProgram(iShaderProgramId);
 
+    // Set view/projection matrix.
+    const auto iViewProjectionMatrixLocation = glGetUniformLocation(iShaderProgramId, "viewProjectionMatrix");
+    if (iViewProjectionMatrixLocation < 0) [[unlikely]] {
+        throw std::runtime_error("unable to get location for view/projection matrix");
+    }
+    const auto viewProjectionMatrix = projectionMatrix * viewMatrix;
+    glUniformMatrix4fv(iViewProjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
+
     for (const auto& mesh : vMeshesToDraw) {
+        // Set world matrix.
+        const auto iWorldMatrixLocation = glGetUniformLocation(iShaderProgramId, "worldMatrix");
+        if (iWorldMatrixLocation < 0) [[unlikely]] {
+            throw std::runtime_error("unable to get location for world matrix");
+        }
+        glUniformMatrix4fv(iWorldMatrixLocation, 1, GL_FALSE, glm::value_ptr(mesh->worldMatrix));
+
         // Set vertex array object.
         glBindVertexArray(mesh->iVertexArrayObjectId);
 
@@ -248,8 +275,17 @@ void Application::prepareShaders() {
 }
 
 void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWidth, int iHeight) {
+    const auto pApplication = static_cast<Application*>(glfwGetWindowUserPointer(pGlfwWindow));
+    if (pApplication == nullptr) [[unlikely]] {
+        return;
+    }
+
     // Update viewport size according to the new framebuffer size.
     glViewport(0, 0, iWidth, iHeight);
+
+    // Update projection matrix.
+    pApplication->projectionMatrix = glm::perspective(
+        glm::radians(verticalFov), static_cast<float>(iWidth) / iHeight, nearClipPlaneZ, farClipPlaneZ);
 }
 
 void Application::glfwWindowKeyboardCallback(
