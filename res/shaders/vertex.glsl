@@ -1,9 +1,9 @@
 #version 460 core
 
-out vec2 fragmentUv;
-
 layout (location = 0) in vec3 position;
-layout (location = 0) in vec2 uv;
+layout (location = 1) in vec2 uv;
+
+out vec2 fragmentUv;
 
 void main()
 {

@@ -21,13 +21,51 @@ void GLAPIENTRY opengGlMessageCallback(
     GLsizei length,
     const GLchar* message,   // NOLINT
     const void* userParam) { // NOLINT
-    fprintf(
-        stderr,
-        "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-        type,
-        severity,
-        message);
+    if (type == GL_DEBUG_TYPE_OTHER) {
+        return; // ignore "other" messages
+    }
+
+    using namespace std;
+    cout << "---------------------opengl-callback-start------------" << endl;
+    cout << "message: " << message << endl;
+    cout << "type: ";
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        cout << "ERROR";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        cout << "DEPRECATED_BEHAVIOR";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        cout << "UNDEFINED_BEHAVIOR";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        cout << "PORTABILITY";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        cout << "PERFORMANCE";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+        cout << "OTHER";
+        break;
+    }
+    cout << endl;
+
+    cout << "id: " << id << endl;
+    cout << "severity: ";
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_LOW:
+        cout << "LOW";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        cout << "MEDIUM";
+        break;
+    case GL_DEBUG_SEVERITY_HIGH:
+        cout << "HIGH";
+        break;
+    }
+    cout << endl;
+    cout << "---------------------opengl-callback-end--------------" << endl;
 }
 
 unsigned int Application::loadTexture(const std::filesystem::path& pathToImage) {
@@ -48,7 +86,7 @@ unsigned int Application::loadTexture(const std::filesystem::path& pathToImage) 
     int iWidth = 0;
     int iHeight = 0;
     int iChannels = 0;
-    const auto pPixels = stbi_load(pathToImage.c_str(), &iWidth, &iHeight, &iChannels, iStbiFormat);
+    const auto pPixels = stbi_load(pathToImage.string().c_str(), &iWidth, &iHeight, &iChannels, iStbiFormat);
     if (pPixels == nullptr) [[unlikely]] {
         throw std::runtime_error(std::format("failed to load image from path \"{}\"", pathToImage.string()));
     }
@@ -200,7 +238,7 @@ void Application::prepareShaders() {
     std::array<char, 1024> infoLog = {0}; // NOLINT
     glGetProgramiv(iShaderProgramId, GL_LINK_STATUS, &iSuccess);
     if (iSuccess == 0) {
-        glGetProgramInfoLog(iShaderProgramId, infoLog.size(), NULL, infoLog.data());
+        glGetProgramInfoLog(iShaderProgramId, static_cast<int>(infoLog.size()), NULL, infoLog.data());
         throw std::runtime_error(std::format("failed to link shader program, error: {}", infoLog.data()));
     }
 
@@ -227,8 +265,7 @@ void Application::glfwWindowKeyboardCallback(
     }
 }
 
-unsigned int
-Application::compileShader(const std::filesystem::__cxx11::path& pathToShader, bool bIsVertexShader) {
+unsigned int Application::compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader) {
     // Make sure the specified path exists.
     if (!std::filesystem::exists(pathToShader)) [[unlikely]] {
         throw std::runtime_error(std::format("expected the path {} to exist", pathToShader.string()));
@@ -248,7 +285,7 @@ Application::compileShader(const std::filesystem::__cxx11::path& pathToShader, b
 
     // Attach shader source code to our created shader.
     std::array<const char*, 1> vCodesToAttach = {sFullSourceCode.c_str()};
-    glShaderSource(iShaderId, vCodesToAttach.size(), vCodesToAttach.data(), NULL);
+    glShaderSource(iShaderId, static_cast<int>(vCodesToAttach.size()), vCodesToAttach.data(), NULL);
 
     // Compile shader.
     glCompileShader(iShaderId);
@@ -258,7 +295,7 @@ Application::compileShader(const std::filesystem::__cxx11::path& pathToShader, b
     std::array<char, 1024> infoLog = {0}; // NOLINT
     glGetShaderiv(iShaderId, GL_COMPILE_STATUS, &iSuccess);
     if (iSuccess == 0) {
-        glGetShaderInfoLog(iShaderId, infoLog.size(), NULL, infoLog.data());
+        glGetShaderInfoLog(iShaderId, static_cast<int>(infoLog.size()), NULL, infoLog.data());
         throw std::runtime_error(std::format(
             "failed to compile shader from {}, error: {}", pathToShader.string(), infoLog.data()));
     }

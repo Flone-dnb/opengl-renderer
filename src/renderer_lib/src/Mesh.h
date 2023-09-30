@@ -45,7 +45,7 @@ struct Mesh {
     unsigned int iIndexBufferObjectId = 0;
 
     /** Total number of indices that this mesh has. */
-    unsigned int iIndexCount = 0;
+    int iIndexCount = 0;
 
     /** ID of the diffuse texture. */
     unsigned int iDiffuseTextureId = 0;

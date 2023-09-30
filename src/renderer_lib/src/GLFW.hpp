@@ -47,5 +47,8 @@ private:
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // NOLINT
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6); // NOLINT
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#if defined(DEBUG)
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
     }
 };

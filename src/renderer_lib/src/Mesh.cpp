@@ -10,6 +10,7 @@ void Vertex::setVertexAttributes() {
     const auto iUvOffset = offsetof(Vertex, uv);
 
     // Specify position.
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0,                 // attribute index (layout location)
         3,                 // number of components
@@ -17,9 +18,9 @@ void Vertex::setVertexAttributes() {
         GL_FALSE,          // whether data should be normalized or not
         sizeof(Vertex),    // stride (size in bytes between elements)
         &iPositionOffset); // beginning offset
-    glEnableVertexAttribArray(0);
 
     // Specify UV.
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(
         1,              // attribute index (layout location)
         2,              // number of components
@@ -27,7 +28,6 @@ void Vertex::setVertexAttributes() {
         GL_FALSE,       // whether data should be normalized or not
         sizeof(Vertex), // stride (size in bytes between elements)
         &iUvOffset);    // beginning offset
-    glEnableVertexAttribArray(1);
 }
 
 Mesh::~Mesh() {
@@ -42,6 +42,13 @@ Mesh::~Mesh() {
 
     // Delete index buffer.
     glDeleteBuffers(1, &iIndexBufferObjectId);
+
+    // Delete texture.
+    glDeleteTextures(1, &iDiffuseTextureId);
+
+#if defined(DEBUG)
+    static_assert(sizeof(Mesh) == 20, "add new resources to be deleted"); // NOLINT
+#endif
 }
 
 std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<unsigned int>&& vIndices) {
@@ -82,6 +89,13 @@ void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {
 }
 
 void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {
+    // Make sure we don't exceed type limit.
+    constexpr size_t iTypeLimit = std::numeric_limits<int>::max();
+    if (vIndices.size() > iTypeLimit) [[unlikely]] {
+        throw std::runtime_error(
+            std::format("index count {} exceeds type limit of {}", vIndices.size(), iTypeLimit));
+    }
+
     // Create element buffer object.
     glGenBuffers(1, &iIndexBufferObjectId);
 
@@ -96,5 +110,5 @@ void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {
         GL_STATIC_DRAW); // `STATIC` because the data will not be changed
 
     // Save the total number of indices.
-    iIndexCount = vIndices.size();
+    iIndexCount = static_cast<int>(vIndices.size());
 }

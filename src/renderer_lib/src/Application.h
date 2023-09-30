@@ -10,7 +10,7 @@
 #include "GLMath.hpp"
 #include "Mesh.h"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 /** Basic OpenGL application. */
 class Application {
