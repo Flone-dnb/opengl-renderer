@@ -41,6 +41,9 @@ unsigned int Application::loadTexture(const std::filesystem::path& pathToImage) 
     const auto iStbiFormat = STBI_rgb;
     const auto iGlFormat = GL_RGB;
 
+    // Flip images vertically when loading.
+    stbi_set_flip_vertically_on_load(1);
+
     // Load image pixels.
     int iWidth = 0;
     int iHeight = 0;
@@ -168,7 +171,8 @@ void Application::drawNextFrame() const {
         // Set vertex array object.
         glBindVertexArray(mesh->iVertexArrayObjectId);
 
-        // Set diffuse texture.
+        // Set diffuse texture at texture unit (location) 0.
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
 
         // Submit a draw command.

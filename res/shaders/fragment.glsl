@@ -4,7 +4,7 @@ out vec4 color;
 
 in vec2 fragmentUv;
 
-uniform sampler2D diffuseTexture;
+layout(binding = 0) uniform sampler2D diffuseTexture;
 
 void main()
 {

@@ -25,6 +25,8 @@ cmake -DCMAKE_BUILD_TYPE=Release .. // for release mode
 
 This will generate project files that you will use for development.
 
+In order to run the app you would need to copy the `res` directory next to the built binary (or create a symlink to the `res` directory next to the built binary) so that the app can find its resources.
+
 # Update
 
 To update this repository:
