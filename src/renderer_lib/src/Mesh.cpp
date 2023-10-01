@@ -70,7 +70,7 @@ std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<
     return pMesh;
 }
 
-void Mesh::setDiffuseTexture(const std::filesystem::__cxx11::path& pathToImageFile) {
+void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
     // Delete previous texture.
     glDeleteTextures(1, &iDiffuseTextureId);
 
