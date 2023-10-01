@@ -9,5 +9,4 @@ out vec4 color;
 void main()
 {
     color = texture(diffuseTexture, fragmentUv);
-    //color = vec4(1.0F, 0.0F, 0.0F, 1.0F);
 } 

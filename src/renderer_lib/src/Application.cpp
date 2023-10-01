@@ -236,12 +236,15 @@ void Application::drawNextFrame() const {
         // Set vertex array object.
         glBindVertexArray(mesh->iVertexArrayObjectId);
 
+        // Set element object.
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->iIndexBufferObjectId);
+
         // Set diffuse texture at texture unit (location) 0.
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
 
         // Submit a draw command.
-        glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
     }
 }
 

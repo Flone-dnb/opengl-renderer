@@ -15,22 +15,22 @@ void Vertex::setVertexAttributes() {
     // Specify position.
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
-        0,                 // attribute index (layout location)
-        3,                 // number of components
-        GL_FLOAT,          // type of component
-        GL_FALSE,          // whether data should be normalized or not
-        sizeof(Vertex),    // stride (size in bytes between elements)
-        &iPositionOffset); // beginning offset
+        0,                                         // attribute index (layout location)
+        3,                                         // number of components
+        GL_FLOAT,                                  // type of component
+        GL_FALSE,                                  // whether data should be normalized or not
+        sizeof(Vertex),                            // stride (size in bytes between elements)
+        reinterpret_cast<void*>(iPositionOffset)); // NOLINT: beginning offset
 
     // Specify UV.
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(
-        1,              // attribute index (layout location)
-        2,              // number of components
-        GL_FLOAT,       // type of component
-        GL_FALSE,       // whether data should be normalized or not
-        sizeof(Vertex), // stride (size in bytes between elements)
-        &iUvOffset);    // beginning offset
+        1,                                   // attribute index (layout location)
+        2,                                   // number of components
+        GL_FLOAT,                            // type of component
+        GL_FALSE,                            // whether data should be normalized or not
+        sizeof(Vertex),                      // stride (size in bytes between elements)
+        reinterpret_cast<void*>(iUvOffset)); // NOLINT: beginning offset
 }
 
 Mesh::~Mesh() {
@@ -64,9 +64,6 @@ std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<
     pMesh->prepareVertexBuffer(std::move(vVertices));
     pMesh->prepareIndexBuffer(std::move(vIndices));
 
-    // Describe vertex attributes.
-    Vertex::setVertexAttributes();
-
     return pMesh;
 }
 
@@ -79,14 +76,14 @@ void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
 }
 
 void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {
-    // Create vertex buffer object (VBO).
-    glGenBuffers(1, &iVertexBufferObjectId);
-
     // Create vertex array object (VAO).
     glGenVertexArrays(1, &iVertexArrayObjectId);
 
     // Bind our vertex array object to the OpenGL context.
     glBindVertexArray(iVertexArrayObjectId);
+
+    // Create vertex buffer object (VBO).
+    glGenBuffers(1, &iVertexBufferObjectId);
 
     // Set our vertex buffer to the "array" target  in OpenGL context to update its data.
     glBindBuffer(GL_ARRAY_BUFFER, iVertexBufferObjectId);
@@ -97,6 +94,12 @@ void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {
         vVertices.size() * sizeof(vVertices[0]),
         vVertices.data(),
         GL_STATIC_DRAW); // `STATIC` because the data will not be changed
+
+    // Describe vertex attributes.
+    Vertex::setVertexAttributes();
+
+    // Finished with vertex buffer.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {
@@ -106,6 +109,9 @@ void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {
         throw std::runtime_error(
             std::format("index count {} exceeds type limit of {}", vIndices.size(), iTypeLimit));
     }
+
+    // Save index count.
+    iIndexCount = static_cast<int>(vIndices.size());
 
     // Create element buffer object.
     glGenBuffers(1, &iIndexBufferObjectId);
@@ -120,6 +126,6 @@ void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {
         vIndices.data(),
         GL_STATIC_DRAW); // `STATIC` because the data will not be changed
 
-    // Save the total number of indices.
-    iIndexCount = static_cast<int>(vIndices.size());
+    // Finished with index buffer.
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
