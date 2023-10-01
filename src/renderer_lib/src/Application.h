@@ -8,6 +8,7 @@
 
 // Custom.
 #include "GLMath.hpp"
+#include "Camera.h"
 #include "Mesh.h"
 
 struct GLFWwindow;
@@ -52,6 +53,25 @@ private:
     glfwWindowKeyboardCallback(GLFWwindow* pGlfwWindow, int iKey, int iScancode, int iAction, int iMods);
 
     /**
+     * GLFW callback.
+     *
+     * @param pGlfwWindow The window that received the event.
+     * @param iButton     The mouse button that was pressed or released.
+     * @param iAction     One of GLFW_PRESS or GLFW_RELEASE.
+     * @param iMods 	     Bit field describing which modifier keys were held down.
+     */
+    static void glfwWindowMouseCallback(GLFWwindow* pGlfwWindow, int iButton, int iAction, int iMods);
+
+    /**
+     * GLFW callback.
+     *
+     * @param pGlfwWindow The window that received the event.
+     * @param xPos        The new x-coordinate, in screen coordinates, of the cursor.
+     * @param yPos        The new y-coordinate, in screen coordinates, of the cursor.
+     */
+    static void glfwWindowMouseCursorPosCallback(GLFWwindow* pGlfwWindow, double xPos, double yPos);
+
+    /**
      * Creates a new shader, assigns it to the OpenGL context, compiles it and returns shader's ID.
      *
      * @param pathToShader    Path to shader code on disk.
@@ -60,6 +80,13 @@ private:
      * @return Created shader's ID.
      */
     static unsigned int compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader);
+
+    /**
+     * Changes cursor's visibility.
+     *
+     * @param bIsVisible Whether the cursor should be visible or not.
+     */
+    void setCursorVisibility(bool bIsVisible) const;
 
     /** Initializes GLFW. */
     void initWindow();
@@ -85,17 +112,17 @@ private:
     /** Stores meshes to draw. */
     std::vector<std::unique_ptr<Mesh>> vMeshesToDraw;
 
-    /** Matrix that transforms data (such as positions) from world space to view space. */
-    glm::mat4x4 viewMatrix = glm::identity<glm::mat4x4>();
-
-    /** Matrix that transforms data (such as positions) from view space to projection (clip) space. */
-    glm::mat4x4 projectionMatrix = glm::identity<glm::mat4x4>();
+    /** Virtual camera. */
+    std::unique_ptr<Camera> pCamera;
 
     /** ID of the shader program that contains all other shaders attached to it. */
     unsigned int iShaderProgramId = 0;
 
     /** GLFW window. */
     GLFWwindow* pGLFWWindow = nullptr;
+
+    /** Camera rotation multiplier. */
+    const float cameraRotationSensitivity = 0.001F;
 
     /** Vertical field of view of the camera. */
     static constexpr float verticalFov = 90.0F; // NOLINT

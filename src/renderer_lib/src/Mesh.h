@@ -7,6 +7,7 @@
 
 // Custom.
 #include "GLMath.hpp"
+#include "shapes/AABB.h"
 
 /** Groups information about one vertex. */
 struct Vertex {
@@ -47,7 +48,10 @@ struct Mesh {
     void setDiffuseTexture(const std::filesystem::path& pathToImageFile);
 
     /** Matrix that transforms data (such as positions) from model space to world space. */
-    glm::mat4x4 worldMatrix = glm::identity<glm::mat4x4>();
+    glm::mat4x4 worldMatrix = glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(0.0F, 0.0F, -5.0F));
+
+    /** Mesh's AABB in model space. */
+    AABB aabb;
 
     /** ID of the vertex array object that references a vertex buffer object and its attributes. */
     unsigned int iVertexArrayObjectId = 0;

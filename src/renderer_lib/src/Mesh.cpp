@@ -50,7 +50,7 @@ Mesh::~Mesh() {
     glDeleteTextures(1, &iDiffuseTextureId);
 
 #if defined(DEBUG)
-    static_assert(sizeof(Mesh) == 84, "add new resources to be deleted"); // NOLINT
+    static_assert(sizeof(Mesh) == 108, "add new resources to be deleted"); // NOLINT
 #endif
 }
 
@@ -100,6 +100,9 @@ void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {
 
     // Finished with vertex buffer.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Generate AABB.
+    aabb = AABB::createFromVertices(&vVertices);
 }
 
 void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {

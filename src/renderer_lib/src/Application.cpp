@@ -112,6 +112,10 @@ unsigned int Application::loadTexture(const std::filesystem::path& pathToImage) 
 }
 
 void Application::run() {
+    // Create camera.
+    pCamera = std::make_unique<Camera>();
+    pCamera->setCameraMovementSpeed(10.0F); // NOLINT
+
     initWindow();
     initOpenGl();
     prepareScene();
@@ -122,14 +126,24 @@ void Application::initWindow() {
     // Initialize GLFW.
     GLFW::get();
 
+    // Create maximized window.
+    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+
+    // Get main monitor.
+    const auto pMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* pMode = glfwGetVideoMode(pMonitor);
+
     // Create GLFW window.
-    constexpr int iWindowWidth = 800;  // NOLINT
-    constexpr int iWindowHeight = 600; // NOLINT
     pGLFWWindow =
-        glfwCreateWindow(iWindowWidth, iWindowHeight, "OpenGL", nullptr, nullptr); // NOLINT: magic number
+        glfwCreateWindow(pMode->width, pMode->height, "OpenGL", nullptr, nullptr); // NOLINT: magic number
     if (pGLFWWindow == nullptr) {
         throw std::runtime_error("failed to create window");
     }
+
+    // Get created window size.
+    int iWidth = -1;
+    int iHeight = -1;
+    glfwGetWindowSize(pGLFWWindow, &iWidth, &iHeight);
 
     // Add Application pointer.
     glfwSetWindowUserPointer(pGLFWWindow, this);
@@ -144,17 +158,19 @@ void Application::initWindow() {
     }
 
     // Specify the initial window size to OpenGL.
-    glViewport(0, 0, iWindowWidth, iWindowHeight);
+    glViewport(0, 0, iWidth, iHeight);
 
-    // Update projection matrix.
-    projectionMatrix = glm::perspective(
-        glm::radians(verticalFov),
-        static_cast<float>(iWindowWidth) / iWindowHeight,
-        nearClipPlaneZ,
-        farClipPlaneZ);
+    // Update camera's aspect ratio.
+    pCamera->getCameraProperties()->setAspectRatio(iWidth, iHeight);
 
     // Bind to framebuffer size change event.
     glfwSetFramebufferSizeCallback(pGLFWWindow, Application::glfwFramebufferResizeCallback);
+
+    // Bind to mouse input.
+    glfwSetMouseButtonCallback(pGLFWWindow, Application::glfwWindowMouseCallback);
+
+    // Bind to mouse move.
+    glfwSetCursorPosCallback(pGLFWWindow, Application::glfwWindowMouseCursorPosCallback);
 
     // Bind to keyboard input.
     glfwSetKeyCallback(pGLFWWindow, Application::glfwWindowKeyboardCallback);
@@ -169,6 +185,10 @@ void Application::initOpenGl() {
 
     // Specify clear color.
     glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+
+    // Enable back face culling.
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);
@@ -188,9 +208,18 @@ void Application::initOpenGl() {
 }
 
 void Application::mainLoop() {
+    // Used for tick.
+    float currentTimeInSec = 0.0F;
+    float prevTimeInSec = static_cast<float>(glfwGetTime());
+
     while (glfwWindowShouldClose(pGLFWWindow) == 0) {
         // Process window events.
         glfwPollEvents();
+
+        // Notify camera.
+        currentTimeInSec = static_cast<float>(glfwGetTime());
+        pCamera->onBeforeNewFrame(currentTimeInSec - prevTimeInSec);
+        prevTimeInSec = currentTimeInSec;
 
         drawNextFrame();
 
@@ -205,9 +234,6 @@ void Application::prepareScene() {
     for (auto& pMesh : vImportedMeshes) {
         vMeshesToDraw.push_back(std::move(pMesh));
     }
-
-    // Setup camera.
-    viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0F, 0.0F, -5.0F)); // NOLINT
 }
 
 void Application::drawNextFrame() const {
@@ -216,6 +242,10 @@ void Application::drawNextFrame() const {
 
     // Set shaders.
     glUseProgram(iShaderProgramId);
+
+    // Get view and projection matrices.
+    const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
+    const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
 
     // Set view/projection matrix.
     const auto iViewProjectionMatrixLocation = glGetUniformLocation(iShaderProgramId, "viewProjectionMatrix");
@@ -278,6 +308,7 @@ void Application::prepareShaders() {
 }
 
 void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWidth, int iHeight) {
+    // Get app pointer.
     const auto pApplication = static_cast<Application*>(glfwGetWindowUserPointer(pGlfwWindow));
     if (pApplication == nullptr) [[unlikely]] {
         return;
@@ -286,9 +317,8 @@ void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWi
     // Update viewport size according to the new framebuffer size.
     glViewport(0, 0, iWidth, iHeight);
 
-    // Update projection matrix.
-    pApplication->projectionMatrix = glm::perspective(
-        glm::radians(verticalFov), static_cast<float>(iWidth) / iHeight, nearClipPlaneZ, farClipPlaneZ);
+    // Update camera's aspect ratio.
+    pApplication->pCamera->getCameraProperties()->setAspectRatio(iWidth, iHeight);
 }
 
 void Application::glfwWindowKeyboardCallback(
@@ -298,10 +328,54 @@ void Application::glfwWindowKeyboardCallback(
         return;
     }
 
+    // Get app pointer.
+    const auto pApplication = static_cast<Application*>(glfwGetWindowUserPointer(pGlfwWindow));
+    if (pApplication == nullptr) [[unlikely]] {
+        return;
+    }
+
     // See if we need to close the window.
     if (iKey == GLFW_KEY_ESCAPE) {
         glfwSetWindowShouldClose(pGlfwWindow, 1);
     }
+
+    if (iKey == GLFW_KEY_W) {
+        pApplication->pCamera->setFreeCameraForwardMovement(iAction == GLFW_PRESS ? 1.0F : 0.0F);
+    } else if (iKey == GLFW_KEY_S) {
+        pApplication->pCamera->setFreeCameraForwardMovement(iAction == GLFW_PRESS ? -1.0F : 0.0F);
+    } else if (iKey == GLFW_KEY_D) {
+        pApplication->pCamera->setFreeCameraRightMovement(iAction == GLFW_PRESS ? 1.0F : 0.0F);
+    } else if (iKey == GLFW_KEY_A) {
+        pApplication->pCamera->setFreeCameraRightMovement(iAction == GLFW_PRESS ? -1.0F : 0.0F);
+    }
+}
+
+void Application::glfwWindowMouseCallback(GLFWwindow* pGlfwWindow, int iButton, int iAction, int iMods) {
+    // Ignore "repeat" actions.
+    if (iAction == GLFW_REPEAT) {
+        return;
+    }
+
+    // Get app pointer.
+    const auto pApplication = static_cast<Application*>(glfwGetWindowUserPointer(pGlfwWindow));
+    if (pApplication == nullptr) [[unlikely]] {
+        return;
+    }
+
+    if (iButton == GLFW_MOUSE_BUTTON_RIGHT) {
+        const auto bIsPressed = iAction == GLFW_PRESS;
+        pApplication->setCursorVisibility(!bIsPressed);
+    }
+}
+
+void Application::glfwWindowMouseCursorPosCallback(GLFWwindow* pGlfwWindow, double xPos, double yPos) {
+    // Get app pointer.
+    const auto pApplication = static_cast<Application*>(glfwGetWindowUserPointer(pGlfwWindow));
+    if (pApplication == nullptr) [[unlikely]] {
+        return;
+    }
+
+    // TODO
 }
 
 unsigned int Application::compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader) {
@@ -340,4 +414,20 @@ unsigned int Application::compileShader(const std::filesystem::path& pathToShade
     }
 
     return iShaderId;
+}
+
+void Application::setCursorVisibility(bool bIsVisible) const {
+    if (bIsVisible) {
+        if (glfwRawMouseMotionSupported() == GLFW_TRUE) {
+            glfwSetInputMode(pGLFWWindow, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+        }
+        glfwSetInputMode(pGLFWWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    } else {
+        glfwSetInputMode(pGLFWWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (glfwRawMouseMotionSupported() == GLFW_TRUE) {
+            glfwSetInputMode(pGLFWWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        } else {
+            throw std::runtime_error("raw mouse motion is not supported");
+        }
+    }
 }

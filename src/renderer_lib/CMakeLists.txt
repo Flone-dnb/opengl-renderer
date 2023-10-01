@@ -25,8 +25,20 @@ set(PROJECT_SOURCES
     src/Mesh.cpp
     src/MeshImporter.h
     src/MeshImporter.cpp
+    src/CameraProperties.h
+    src/CameraProperties.cpp
+    src/Camera.h
+    src/Camera.cpp
     src/GLMath.hpp
     src/GLFW.hpp
+    src/Globals.hpp
+    src/MathHelpers.hpp
+    src/shapes/AABB.cpp
+    src/shapes/AABB.h
+    src/shapes/Frustum.h
+    src/shapes/Frustum.cpp
+    src/shapes/Plane.h
+    src/shapes/Plane.cpp
     # add your .h/.cpp files here
 )
 
