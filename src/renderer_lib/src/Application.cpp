@@ -339,6 +339,11 @@ void Application::glfwWindowKeyboardCallback(
         glfwSetWindowShouldClose(pGlfwWindow, 1);
     }
 
+    // Next, process movement.
+    if (!pApplication->bIsMouseCursorCaptured) {
+        return;
+    }
+
     if (iKey == GLFW_KEY_W) {
         pApplication->pCamera->setFreeCameraForwardMovement(iAction == GLFW_PRESS ? 1.0F : 0.0F);
     } else if (iKey == GLFW_KEY_S) {
@@ -365,6 +370,7 @@ void Application::glfwWindowMouseCallback(GLFWwindow* pGlfwWindow, int iButton, 
     if (iButton == GLFW_MOUSE_BUTTON_RIGHT) {
         const auto bIsPressed = iAction == GLFW_PRESS;
         pApplication->setCursorVisibility(!bIsPressed);
+        pApplication->bIsMouseCursorCaptured = bIsPressed;
     }
 }
 
@@ -375,7 +381,20 @@ void Application::glfwWindowMouseCursorPosCallback(GLFWwindow* pGlfwWindow, doub
         return;
     }
 
-    // TODO
+    if (!pApplication->bIsMouseCursorCaptured) {
+        return;
+    }
+
+    const auto deltaX = xPos - pApplication->lastMousePosX;
+    const auto deltaY = pApplication->lastMousePosY - yPos;
+
+    auto currentRotation = pApplication->pCamera->getFreeCameraRotation();
+    currentRotation.y -= static_cast<float>(deltaX * pApplication->cameraRotationSensitivity);
+    currentRotation.x -= static_cast<float>(deltaY * pApplication->cameraRotationSensitivity);
+    pApplication->pCamera->setFreeCameraRotation(currentRotation);
+
+    pApplication->lastMousePosX = xPos;
+    pApplication->lastMousePosY = yPos;
 }
 
 unsigned int Application::compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader) {

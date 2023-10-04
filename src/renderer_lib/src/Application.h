@@ -121,8 +121,17 @@ private:
     /** GLFW window. */
     GLFWwindow* pGLFWWindow = nullptr;
 
+    /** Used to calculate mouse movement offset. */
+    double lastMousePosX = 0.0;
+
+    /** Used to calculate mouse movement offset. */
+    double lastMousePosY = 0.0;
+
     /** Camera rotation multiplier. */
-    const float cameraRotationSensitivity = 0.001F;
+    const double cameraRotationSensitivity = 0.02;
+
+    /** `true` if mouse cursor is hidden, `false `otherwise. */
+    bool bIsMouseCursorCaptured = false;
 
     /** Vertical field of view of the camera. */
     static constexpr float verticalFov = 90.0F; // NOLINT

@@ -48,7 +48,7 @@ struct Mesh {
     void setDiffuseTexture(const std::filesystem::path& pathToImageFile);
 
     /** Matrix that transforms data (such as positions) from model space to world space. */
-    glm::mat4x4 worldMatrix = glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(0.0F, 0.0F, -5.0F));
+    glm::mat4x4 worldMatrix = glm::identity<glm::mat4x4>();
 
     /** Mesh's AABB in model space. */
     AABB aabb;
