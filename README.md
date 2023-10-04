@@ -2,6 +2,12 @@
 
 Hold right mouse button to rotate the camera and use WASDEQ keys (while still holding right mouse button) to move.
 
+# Features
+
+- [X] GLB/GLTF import.
+- [X] Frustum culling.
+- [X] Diffuse textures.
+
 # Setup (Build)
 
 Prerequisites:

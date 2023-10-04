@@ -17,11 +17,11 @@ bool Frustum::isAabbInFrustum(const AABB& aabbInModelSpace, const glm::mat4x4& w
     // Calculate OBB directions in world space
     // (directions are considered to point from OBB's center).
     const glm::vec3 obbScaledForward =
-        worldMatrix * glm::vec4(Globals::WorldDirection::forward, 0.0F) * aabbInModelSpace.extents.x;
+        worldMatrix * glm::vec4(Globals::WorldDirection::forward, 0.0F) * aabbInModelSpace.extents.z;
     const glm::vec3 obbScaledRight =
-        worldMatrix * glm::vec4(Globals::WorldDirection::right, 0.0F) * aabbInModelSpace.extents.y;
+        worldMatrix * glm::vec4(Globals::WorldDirection::right, 0.0F) * aabbInModelSpace.extents.x;
     const glm::vec3 obbScaledUp =
-        worldMatrix * glm::vec4(Globals::WorldDirection::up, 0.0F) * aabbInModelSpace.extents.z;
+        worldMatrix * glm::vec4(Globals::WorldDirection::up, 0.0F) * aabbInModelSpace.extents.y;
 
     // If the specified world matrix contained a rotation OBB's directions are no longer aligned
     // with world axes. We need to adjust these OBB directions to be world axis aligned and save them

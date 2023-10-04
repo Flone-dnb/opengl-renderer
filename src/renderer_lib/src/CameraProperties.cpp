@@ -232,15 +232,15 @@ void CameraProperties::recalculateFrustum() {
     // Update frustum right face.
     frustum.rightFace = Plane(
         glm::normalize(glm::cross(
-            viewData.worldUpDirection,
-            toFarPlaneRelativeCameraLocation + cameraWorldRight * farClipPlaneHalfWidth)),
+            toFarPlaneRelativeCameraLocation - cameraWorldRight * farClipPlaneHalfWidth,
+            viewData.worldUpDirection)),
         viewData.worldLocation);
 
     // Update frustum left face.
     frustum.leftFace = Plane(
         glm::normalize(glm::cross(
             viewData.worldUpDirection,
-            toFarPlaneRelativeCameraLocation - cameraWorldRight * farClipPlaneHalfWidth)),
+            toFarPlaneRelativeCameraLocation + cameraWorldRight * farClipPlaneHalfWidth)),
         viewData.worldLocation);
 
     // Update frustum top face.

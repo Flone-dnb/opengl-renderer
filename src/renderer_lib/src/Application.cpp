@@ -256,6 +256,12 @@ void Application::drawNextFrame() const {
     glUniformMatrix4fv(iViewProjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
 
     for (const auto& mesh : vMeshesToDraw) {
+        // Do frustum culling.
+        if (!pCamera->getCameraProperties()->getCameraFrustum()->isAabbInFrustum(
+                mesh->aabb, mesh->worldMatrix)) {
+            return;
+        }
+
         // Set world matrix.
         const auto iWorldMatrixLocation = glGetUniformLocation(iShaderProgramId, "worldMatrix");
         if (iWorldMatrixLocation < 0) [[unlikely]] {
