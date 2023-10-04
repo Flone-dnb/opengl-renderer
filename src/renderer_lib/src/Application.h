@@ -128,7 +128,7 @@ private:
     double lastMousePosY = 0.0;
 
     /** Camera rotation multiplier. */
-    const double cameraRotationSensitivity = 0.02;
+    const double cameraRotationSensitivity = 0.1;
 
     /** `true` if mouse cursor is hidden, `false `otherwise. */
     bool bIsMouseCursorCaptured = false;

@@ -1,6 +1,6 @@
 # Controls
 
-Hold right mouse button to rotate the camera and use WASD keys (while still holding right mouse button) to move.
+Hold right mouse button to rotate the camera and use WASDEQ keys (while still holding right mouse button) to move.
 
 # Setup (Build)
 

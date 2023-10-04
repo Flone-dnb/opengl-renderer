@@ -341,6 +341,9 @@ void Application::glfwWindowKeyboardCallback(
 
     // Next, process movement.
     if (!pApplication->bIsMouseCursorCaptured) {
+        // Reset all input (if there was any input).
+        pApplication->pCamera->setFreeCameraForwardMovement(0.0F);
+        pApplication->pCamera->setFreeCameraRightMovement(0.0F);
         return;
     }
 
@@ -352,6 +355,10 @@ void Application::glfwWindowKeyboardCallback(
         pApplication->pCamera->setFreeCameraRightMovement(iAction == GLFW_PRESS ? 1.0F : 0.0F);
     } else if (iKey == GLFW_KEY_A) {
         pApplication->pCamera->setFreeCameraRightMovement(iAction == GLFW_PRESS ? -1.0F : 0.0F);
+    } else if (iKey == GLFW_KEY_E) {
+        pApplication->pCamera->setFreeCameraWorldUpMovement(iAction == GLFW_PRESS ? 1.0F : 0.0F);
+    } else if (iKey == GLFW_KEY_Q) {
+        pApplication->pCamera->setFreeCameraWorldUpMovement(iAction == GLFW_PRESS ? -1.0F : 0.0F);
     }
 }
 
@@ -381,20 +388,23 @@ void Application::glfwWindowMouseCursorPosCallback(GLFWwindow* pGlfwWindow, doub
         return;
     }
 
+    // Calculate delta.
+    const auto deltaX = xPos - pApplication->lastMousePosX;
+    const auto deltaY = pApplication->lastMousePosY - yPos;
+
+    // Save current position to calculate delta on next movement.
+    pApplication->lastMousePosX = xPos;
+    pApplication->lastMousePosY = yPos;
+
     if (!pApplication->bIsMouseCursorCaptured) {
         return;
     }
 
-    const auto deltaX = xPos - pApplication->lastMousePosX;
-    const auto deltaY = pApplication->lastMousePosY - yPos;
-
+    // Apply movement to camera rotation.
     auto currentRotation = pApplication->pCamera->getFreeCameraRotation();
-    currentRotation.y -= static_cast<float>(deltaX * pApplication->cameraRotationSensitivity);
-    currentRotation.x -= static_cast<float>(deltaY * pApplication->cameraRotationSensitivity);
+    currentRotation.y -= static_cast<float>(deltaX * pApplication->cameraRotationSensitivity); // yaw
+    currentRotation.x += static_cast<float>(deltaY * pApplication->cameraRotationSensitivity); // pitch
     pApplication->pCamera->setFreeCameraRotation(currentRotation);
-
-    pApplication->lastMousePosX = xPos;
-    pApplication->lastMousePosY = yPos;
 }
 
 unsigned int Application::compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader) {
