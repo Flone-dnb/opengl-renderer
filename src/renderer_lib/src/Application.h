@@ -33,6 +33,9 @@ public:
         /** The total number of frames drawn last second. */
         size_t iFramesPerSecond = 0;
 
+        /** The total number of objects that was culled and not submitted for drawing. */
+        size_t iCulledObjectsLastFrame = 0;
+
         /** Last time when @ref iFramesPerSecond was updated. */
         std::chrono::steady_clock::time_point timeAtLastFpsUpdate = std::chrono::steady_clock::now();
     };

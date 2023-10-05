@@ -54,6 +54,7 @@ public:
 
             ImGui::Text("hold right mouse button and WASDEQ to move/rotate");
             ImGui::Text("FPS: %zu", pApp->getProfilingStats()->iFramesPerSecond);
+            ImGui::Text("Culled objects: %zu", pApp->getProfilingStats()->iCulledObjectsLastFrame);
         }
 
         ImGui::End();

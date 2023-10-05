@@ -286,6 +286,9 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
 Application::ProfilingStatistics* Application::getProfilingStats() { return &stats; }
 
 void Application::drawNextFrame() {
+    // Refresh culled object counter.
+    stats.iCulledObjectsLastFrame = 0;
+
     // Clear color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -310,7 +313,8 @@ void Application::drawNextFrame() {
             // Do frustum culling.
             if (!pCamera->getCameraProperties()->getCameraFrustum()->isAabbInFrustum(
                     mesh->aabb, mesh->worldMatrix)) {
-                return;
+                stats.iCulledObjectsLastFrame += 1;
+                continue;
             }
 
             // Set world matrix.
@@ -421,8 +425,9 @@ void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMac
 void Application::onFrameSubmitted() {
     using namespace std::chrono;
 
+    // Increment frame count.
     static size_t iTotalFramesSubmittedLastSecond = 0;
-    iTotalFramesSubmittedLastSecond += 1; // count new frame
+    iTotalFramesSubmittedLastSecond += 1;
 
     // Calculate how much time has passed since we updated our FPS counter last time.
     const auto iTimeSinceFpsUpdateInSec =
