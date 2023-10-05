@@ -40,6 +40,7 @@ set(PROJECT_SOURCES
     src/shapes/Frustum.cpp
     src/shapes/Plane.h
     src/shapes/Plane.cpp
+    src/ImGuiWindow.hpp
     # add your .h/.cpp files here
 )
 
@@ -82,7 +83,7 @@ enable_clang_tidy(${CMAKE_CURRENT_LIST_DIR}/../../.clang-tidy)
 #                                       DEPENDENCIES
 # -------------------------------------------------------------------------------------------------
 
-# Add "OpenGL".
+# External: "OpenGL".
 find_package(OpenGL REQUIRED)
 if (OPENGL_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenGL::GL)
@@ -90,14 +91,14 @@ else (OPENGL_FOUND)
     message(FATAL_ERROR "unable to find OpenGL")
 endif()
 
-# Add "GLSL shader includer".
+# External: "GLSL shader includer".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLSL-Shader-Includer\"...")
 set(GLSL_SHADER_INCLUDER_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
 set(GLSL_SHADER_INCLUDER_ENABLE_DOXYGEN OFF CACHE BOOL "" FORCE)
 add_subdirectory(${RELATIVE_EXT_PATH}/GLSL-Shader-Includes ${DEPENDENCY_BUILD_DIR_NAME}/GLSL-Shader-Includes SYSTEM)
 target_link_libraries(${PROJECT_NAME} PUBLIC GlslShaderIncluderLib)
 
-# Add "GLAD".
+# External "GLAD".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLAD\"...")
 set(GLAD_TARGET_NAME GLAD)
 add_library(${GLAD_TARGET_NAME} STATIC
@@ -108,7 +109,7 @@ set_target_properties(${GLAD_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 add_dependencies(${PROJECT_NAME} ${GLAD_TARGET_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${GLAD_TARGET_NAME})
 
-# External: tinygltf
+# External: "tinygltf"
 message(STATUS "${PROJECT_NAME}: adding external dependency \"tinygltf\"...")
 set(TINYGLTF_HEADER_ONLY ON CACHE BOOL "" FORCE)
 set(TINYGLTF_INSTALL OFF CACHE BOOL "" FORCE)
@@ -118,7 +119,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tinygltf)
 set_target_properties(tinygltf PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 add_dependencies(${PROJECT_NAME} tinygltf)
 
-# External: xxHash
+# External: "xxHash"
 message(STATUS "${PROJECT_NAME}: adding external dependency \"xxHash\"...")
 set(XXHASH_TARGET_NAME xxHash)
 add_library(${XXHASH_TARGET_NAME} STATIC
@@ -128,14 +129,14 @@ set_target_properties(${XXHASH_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER}
 add_dependencies(${PROJECT_NAME} ${XXHASH_TARGET_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${XXHASH_TARGET_NAME})
 
-# Add "GLM".
+# External: "GLM".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLM\"...")
 add_subdirectory(${RELATIVE_EXT_PATH}/glm ${DEPENDENCY_BUILD_DIR_NAME}/glm SYSTEM)
 target_link_libraries(${PROJECT_NAME} PUBLIC glm)
 set_target_properties(glm PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 set_target_properties(uninstall PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 
-# Add "GLFW".
+# External: "GLFW".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLFW\"...")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -145,3 +146,22 @@ add_subdirectory(${RELATIVE_EXT_PATH}/glfw ${DEPENDENCY_BUILD_DIR_NAME}/glfw SYS
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 set_target_properties(glfw PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 set_target_properties(update_mappings PROPERTIES FOLDER ${EXTERNAL_FOLDER})
+
+# External: "ImGui"
+message(STATUS "${PROJECT_NAME}: adding external dependency \"ImGui\"...")
+set(IMGUI_TARGET_NAME ImGui)
+file(GLOB IMGUI_CPP ${RELATIVE_EXT_PATH}/imgui/*.cpp)
+file(GLOB IMGUI_HEADERS ${RELATIVE_EXT_PATH}/imgui/*.h)
+add_library(${IMGUI_TARGET_NAME} STATIC
+    ${IMGUI_CPP}
+    ${IMGUI_HEADERS}
+    ${RELATIVE_EXT_PATH}/imgui/backends/imgui_impl_glfw.cpp
+    ${RELATIVE_EXT_PATH}/imgui/backends/imgui_impl_opengl3.cpp
+    ${RELATIVE_EXT_PATH}/imgui/backends/imgui_impl_glfw.h
+    ${RELATIVE_EXT_PATH}/imgui/backends/imgui_impl_opengl3.h
+)
+target_include_directories(${IMGUI_TARGET_NAME} SYSTEM PUBLIC ${RELATIVE_EXT_PATH}/imgui)
+target_include_directories(${IMGUI_TARGET_NAME} SYSTEM PUBLIC ${RELATIVE_EXT_PATH}/imgui/backends)
+set_target_properties(${IMGUI_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})
+add_dependencies(${PROJECT_NAME} ${IMGUI_TARGET_NAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${IMGUI_TARGET_NAME})

@@ -9,10 +9,14 @@
 #include "GLFW.hpp"
 #include "ShaderIncluder.h"
 #include "MeshImporter.h"
+#include "ImGuiWindow.hpp"
 
 // External.
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 void GLAPIENTRY opengGlMessageCallback(
     GLenum source,
@@ -117,9 +121,14 @@ void Application::run() {
     pCamera->setCameraMovementSpeed(10.0F); // NOLINT
 
     initWindow();
+
+    setupImGui();
+
     initOpenGl();
     prepareScene();
     mainLoop();
+
+    shutdownImGui();
 }
 
 void Application::initWindow() {
@@ -193,15 +202,11 @@ void Application::initOpenGl() {
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);
 
-    // Set texture wrapping.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // Disable VSync.
+    glfwSwapInterval(0);
 
-    // Set texture filtering.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_MAG_FILTER,
-        GL_LINEAR); // no need to set `MIPMAP` option since magnification does not use mipmaps
+    // Enable MSAA.
+    glEnable(GL_MULTISAMPLE);
 }
 
 void Application::mainLoop() {
@@ -266,7 +271,13 @@ void Application::prepareScene() {
     pCamera->setLocation(glm::vec3(0.0F, 0.0F, cameraDistance * 2));
 }
 
-void Application::drawNextFrame() const {
+void Application::drawNextFrame() {
+    // Start drawing the Dear ImGui frame.
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGuiWindow::drawWindow(stats.iFramesPerSecond);
+
     // Clear color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -311,10 +322,31 @@ void Application::drawNextFrame() const {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
 
+            // Set texture wrapping.
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            // Set texture filtering.
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(
+                GL_TEXTURE_2D,
+                GL_TEXTURE_MAG_FILTER,
+                GL_LINEAR); // no need to set `MIPMAP` option since magnification does not use mipmaps
+
+            // Enable anisotropic texture filtering (core in OpenGL 4.6 which we are using).
+            float maxSupportedAnisotropy = 0.0F;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxSupportedAnisotropy);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, maxSupportedAnisotropy);
+
             // Submit a draw command.
             glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
         }
     }
+
+    // Finish drawing the Dear ImGui frame.
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    onFrameSubmitted();
 }
 
 void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMacro>& macros) {
@@ -380,6 +412,25 @@ void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMac
     // Delete shaders since we don't need them anymore.
     glDeleteShader(iVertexShaderId);
     glDeleteShader(iFragmentShaderId);
+}
+
+void Application::onFrameSubmitted() {
+    using namespace std::chrono;
+
+    static size_t iTotalFramesSubmittedLastSecond = 0;
+    iTotalFramesSubmittedLastSecond += 1; // count new frame
+
+    // Calculate how much time has passed since we updated our FPS counter last time.
+    const auto iTimeSinceFpsUpdateInSec =
+        duration_cast<seconds>(steady_clock::now() - stats.timeAtLastFpsUpdate).count();
+
+    if (iTimeSinceFpsUpdateInSec >= 1) {
+        // Update FPS counter.
+        stats.iFramesPerSecond = iTotalFramesSubmittedLastSecond;
+        iTotalFramesSubmittedLastSecond = 0;
+
+        stats.timeAtLastFpsUpdate = steady_clock::now();
+    }
 }
 
 void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWidth, int iHeight) {
@@ -518,6 +569,30 @@ unsigned int Application::compileShader(const std::filesystem::path& pathToShade
     }
 
     return iShaderId;
+}
+
+void Application::setupImGui() {
+    // Make sure window was initialized.
+    if (pGLFWWindow == nullptr) [[unlikely]] {
+        throw std::runtime_error("expected the window to be initialized");
+    }
+
+    // Setup Dear ImGui context.
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& imguiIo = ImGui::GetIO();
+    imguiIo.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+
+    // Setup Platform/Renderer backends.
+    ImGui_ImplGlfw_InitForOpenGL(pGLFWWindow, true);
+    ImGui_ImplOpenGL3_Init();
+}
+
+void Application::shutdownImGui() {
+    // Shutdown ImGui.
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
 
 void Application::setCursorVisibility(bool bIsVisible) const {

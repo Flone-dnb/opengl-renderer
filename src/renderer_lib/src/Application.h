@@ -43,6 +43,15 @@ public:
     void run();
 
 private:
+    /** Groups various statistics such as FPS. */
+    struct ProfilingStatistics {
+        /** The total number of frames drawn last second. */
+        size_t iFramesPerSecond = 0;
+
+        /** Last time when @ref iFramesPerSecond was updated. */
+        std::chrono::steady_clock::time_point timeAtLastFpsUpdate = std::chrono::steady_clock::now();
+    };
+
     /**
      * GLFW callback that's called after the framebuffer size was changed.
      *
@@ -94,6 +103,16 @@ private:
     static unsigned int compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader);
 
     /**
+     * Setups the Dear ImGui library.
+     *
+     * @warning Expects that @ref pGLFWWindow is initialized.
+     */
+    void setupImGui();
+
+    /** Deinitializes the Dear ImGui library after @ref setupImGui. */
+    static void shutdownImGui();
+
+    /**
      * Changes cursor's visibility.
      *
      * @param bIsVisible Whether the cursor should be visible or not.
@@ -113,7 +132,7 @@ private:
     void prepareScene();
 
     /** Draws next frame. */
-    void drawNextFrame() const;
+    void drawNextFrame();
 
     /**
      * Checks that a shader program with the specified properties in @ref meshesToDraw exists
@@ -122,6 +141,9 @@ private:
      * @param macros Macros that should be defined for a shader program.
      */
     void prepareShaderProgram(const std::unordered_set<ShaderProgramMacro>& macros);
+
+    /** Updates @ref stats. */
+    void onFrameSubmitted();
 
     /** Virtual camera. */
     std::unique_ptr<Camera> pCamera;
@@ -132,6 +154,9 @@ private:
         ShaderMeshGroup,
         ShaderProgramMacroUnorderedSetHash>
         meshesToDraw;
+
+    /** Various statistics for profiling. */
+    ProfilingStatistics stats;
 
     /** GLFW window. */
     GLFWwindow* pGLFWWindow = nullptr;
