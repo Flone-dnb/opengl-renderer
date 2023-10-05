@@ -193,9 +193,6 @@ void Application::initOpenGl() {
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);
 
-    // Set shaders to context.
-    prepareShaders();
-
     // Set texture wrapping.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -231,80 +228,152 @@ void Application::mainLoop() {
 void Application::prepareScene() {
     // Import meshes from file.
     auto vImportedMeshes = MeshImporter::importMesh("res/mesh.glb");
-    for (auto& pMesh : vImportedMeshes) {
-        vMeshesToDraw.push_back(std::move(pMesh));
+
+    // See which macros we need to define.
+    std::unordered_set<ShaderProgramMacro> macros;
+    for (const auto& pMesh : vImportedMeshes) {
+        if (pMesh->iDiffuseTextureId > 0) {
+            macros.insert(ShaderProgramMacro::USE_DIFFUSE_TEXTURE);
+        }
     }
+
+    // Prepare shader program for the specified macros.
+    prepareShaderProgram(macros);
+
+    float cameraDistance = 0.0F;
+
+    // Add to meshes to be drawn.
+    for (auto& pMesh : vImportedMeshes) {
+        // Calculate camera's distance to capture the meshes.
+        const auto xBound = std::abs(pMesh->aabb.extents.x) * 2;
+        const auto yBound = std::abs(pMesh->aabb.extents.y) * 2;
+        const auto zBound = std::abs(pMesh->aabb.extents.z) * 2;
+        if (xBound > cameraDistance) {
+            cameraDistance = xBound;
+        }
+        if (yBound > cameraDistance) {
+            cameraDistance = yBound;
+        }
+        if (zBound > cameraDistance) {
+            cameraDistance = zBound;
+        }
+
+        // Add mesh to be drawn.
+        meshesToDraw[macros].meshes.insert(std::move(pMesh));
+    }
+
+    // Set camera's position.
+    pCamera->setLocation(glm::vec3(0.0F, 0.0F, cameraDistance * 2));
 }
 
 void Application::drawNextFrame() const {
     // Clear color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Set shaders.
-    glUseProgram(iShaderProgramId);
+    // Draw meshes of each shader variation.
+    for (const auto& [macros, shader] : meshesToDraw) {
+        glUseProgram(shader.iShaderProgramId);
 
-    // Get view and projection matrices.
-    const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
-    const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
+        // Get view and projection matrices.
+        const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
+        const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
 
-    // Set view/projection matrix.
-    const auto iViewProjectionMatrixLocation = glGetUniformLocation(iShaderProgramId, "viewProjectionMatrix");
-    if (iViewProjectionMatrixLocation < 0) [[unlikely]] {
-        throw std::runtime_error("unable to get location for view/projection matrix");
-    }
-    const auto viewProjectionMatrix = projectionMatrix * viewMatrix;
-    glUniformMatrix4fv(iViewProjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
-
-    for (const auto& mesh : vMeshesToDraw) {
-        // Do frustum culling.
-        if (!pCamera->getCameraProperties()->getCameraFrustum()->isAabbInFrustum(
-                mesh->aabb, mesh->worldMatrix)) {
-            return;
+        // Set view/projection matrix.
+        const auto iViewProjectionMatrixLocation =
+            glGetUniformLocation(shader.iShaderProgramId, "viewProjectionMatrix");
+        if (iViewProjectionMatrixLocation < 0) [[unlikely]] {
+            throw std::runtime_error("unable to get location for view/projection matrix");
         }
+        const auto viewProjectionMatrix = projectionMatrix * viewMatrix;
+        glUniformMatrix4fv(iViewProjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
 
-        // Set world matrix.
-        const auto iWorldMatrixLocation = glGetUniformLocation(iShaderProgramId, "worldMatrix");
-        if (iWorldMatrixLocation < 0) [[unlikely]] {
-            throw std::runtime_error("unable to get location for world matrix");
+        for (const auto& mesh : shader.meshes) {
+            // Do frustum culling.
+            if (!pCamera->getCameraProperties()->getCameraFrustum()->isAabbInFrustum(
+                    mesh->aabb, mesh->worldMatrix)) {
+                return;
+            }
+
+            // Set world matrix.
+            const auto iWorldMatrixLocation = glGetUniformLocation(shader.iShaderProgramId, "worldMatrix");
+            if (iWorldMatrixLocation < 0) [[unlikely]] {
+                throw std::runtime_error("unable to get location for world matrix");
+            }
+            glUniformMatrix4fv(iWorldMatrixLocation, 1, GL_FALSE, glm::value_ptr(mesh->worldMatrix));
+
+            // Set vertex array object.
+            glBindVertexArray(mesh->iVertexArrayObjectId);
+
+            // Set element object.
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->iIndexBufferObjectId);
+
+            // Set diffuse texture at texture unit (location) 0.
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
+
+            // Submit a draw command.
+            glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
         }
-        glUniformMatrix4fv(iWorldMatrixLocation, 1, GL_FALSE, glm::value_ptr(mesh->worldMatrix));
-
-        // Set vertex array object.
-        glBindVertexArray(mesh->iVertexArrayObjectId);
-
-        // Set element object.
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->iIndexBufferObjectId);
-
-        // Set diffuse texture at texture unit (location) 0.
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
-
-        // Submit a draw command.
-        glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
     }
 }
 
-void Application::prepareShaders() {
+void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMacro>& macros) {
+    // See if a shader program with these macros was already compiled.
+    if (meshesToDraw.find(macros) != meshesToDraw.end()) {
+        // Nothing to do.
+        return;
+    }
+
+    // because I haven't found a way to properly define macros for GLSL shaders from C/C++ code
+    // using OpenGL functionality I decided to make shaders to include a special non-existing file
+    // that will contain all defined macros, multi-threaded shader compilation with this approach
+    // is impossible but it's OK because this project is just for learning purposes,
+    // now I will create the file with macrosand delete it after compilation
+    static std::mutex predefinedMacrosMutex;
+    std::scoped_lock guard(predefinedMacrosMutex); // using a static mutex to create a critical section here
+                                                   // because we create and delete a temporary file with
+                                                   // predefined shader macros, although at the moment
+                                                   // of writing this we don't use multi-threaded shader
+                                                   // compilation I'm adding this static mutex to not
+                                                   // shoot myself in the foot if in the future I will add
+                                                   // multi-threaded shader compilation
+
+    // Create a temporary file with defined macros.
+    const auto sPathToMacrosFile = std::string("res/shaders/defined_macros.glsl");
+    std::ofstream macrosFile(sPathToMacrosFile);
+    if (!macrosFile.is_open()) [[unlikely]] {
+        throw std::runtime_error("failed to create a file for predefined shader macros");
+    }
+    for (const auto& macro : macros) {
+        macrosFile << "#define " + macroToText(macro);
+    }
+    macrosFile.close();
+
     // Prepare shaders.
     const auto iVertexShaderId = compileShader("res/shaders/vertex.glsl", true);
     const auto iFragmentShaderId = compileShader("res/shaders/fragment.glsl", false);
 
+    // Remove the temporary file with macros.
+    std::filesystem::remove(sPathToMacrosFile);
+
     // Create shader program.
-    iShaderProgramId = glCreateProgram();
+    auto& shaderProgram = meshesToDraw[macros];
+    shaderProgram.iShaderProgramId = glCreateProgram();
 
     // Attach shaders to shader program.
-    glAttachShader(iShaderProgramId, iVertexShaderId);
-    glAttachShader(iShaderProgramId, iFragmentShaderId);
+    glAttachShader(shaderProgram.iShaderProgramId, iVertexShaderId);
+    glAttachShader(shaderProgram.iShaderProgramId, iFragmentShaderId);
 
     // Link shaders together.
-    glLinkProgram(iShaderProgramId);
+    glLinkProgram(shaderProgram.iShaderProgramId);
 
     // See if there were any linking errors.
     int iSuccess = 0;
     std::array<char, 1024> infoLog = {0}; // NOLINT
-    glGetProgramiv(iShaderProgramId, GL_LINK_STATUS, &iSuccess);
+    glGetProgramiv(shaderProgram.iShaderProgramId, GL_LINK_STATUS, &iSuccess);
     if (iSuccess == 0) {
-        glGetProgramInfoLog(iShaderProgramId, static_cast<int>(infoLog.size()), NULL, infoLog.data());
+        glGetProgramInfoLog(
+            shaderProgram.iShaderProgramId, static_cast<int>(infoLog.size()), NULL, infoLog.data());
         throw std::runtime_error(std::format("failed to link shader program, error: {}", infoLog.data()));
     }
 

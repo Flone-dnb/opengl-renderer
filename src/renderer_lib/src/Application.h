@@ -5,13 +5,25 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <unordered_map>
+#include <unordered_set>
 
 // Custom.
 #include "GLMath.hpp"
 #include "Camera.h"
 #include "Mesh.h"
+#include "ShaderProgramMacro.hpp"
 
 struct GLFWwindow;
+
+/** Groups meshes that use the same shader program. */
+struct ShaderMeshGroup {
+    /** ID of the shader program. */
+    unsigned int iShaderProgramId = 0;
+
+    /** Meshes that use shader program @ref iShaderProgramId. */
+    std::unordered_set<std::unique_ptr<Mesh>> meshes;
+};
 
 /** Basic OpenGL application. */
 class Application {
@@ -92,31 +104,34 @@ private:
     void initWindow();
 
     /** Initializes rendering. */
-    void initOpenGl();
+    static void initOpenGl();
 
     /** Processes window messages and does the rendering. */
     void mainLoop();
 
-    /** Prepares a scene with meshes to draw (fills @ref vMeshesToDraw).  */
+    /** Prepares a scene with meshes to draw (fills @ref meshesToDraw).  */
     void prepareScene();
 
     /** Draws next frame. */
     void drawNextFrame() const;
 
     /**
-     * Creates and compiles shaders into a shader program, assigns it to the OpenGL context and stores its ID
-     * in @ref iShaderProgramId.
+     * Checks that a shader program with the specified properties in @ref meshesToDraw exists
+     * and if not creates and compiles one.
+     *
+     * @param macros Macros that should be defined for a shader program.
      */
-    void prepareShaders();
-
-    /** Stores meshes to draw. */
-    std::vector<std::unique_ptr<Mesh>> vMeshesToDraw;
+    void prepareShaderProgram(const std::unordered_set<ShaderProgramMacro>& macros);
 
     /** Virtual camera. */
     std::unique_ptr<Camera> pCamera;
 
-    /** ID of the shader program that contains all other shaders attached to it. */
-    unsigned int iShaderProgramId = 0;
+    /** Stores pairs of "macros of a shader program" - "meshes that use this shader program". */
+    std::unordered_map<
+        std::unordered_set<ShaderProgramMacro>,
+        ShaderMeshGroup,
+        ShaderProgramMacroUnorderedSetHash>
+        meshesToDraw;
 
     /** GLFW window. */
     GLFWwindow* pGLFWWindow = nullptr;
@@ -132,13 +147,4 @@ private:
 
     /** `true` if mouse cursor is hidden, `false `otherwise. */
     bool bIsMouseCursorCaptured = false;
-
-    /** Vertical field of view of the camera. */
-    static constexpr float verticalFov = 90.0F; // NOLINT
-
-    /** Z coordinate in the camera space of the near clip plane. */
-    static constexpr float nearClipPlaneZ = 0.3F;
-
-    /** Z coordinate in the camera space of the far clip plane. */
-    static constexpr float farClipPlaneZ = 1000.0F;
 };

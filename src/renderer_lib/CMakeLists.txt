@@ -32,6 +32,7 @@ set(PROJECT_SOURCES
     src/GLMath.hpp
     src/GLFW.hpp
     src/Globals.hpp
+    src/ShaderProgramMacro.hpp
     src/MathHelpers.hpp
     src/shapes/AABB.cpp
     src/shapes/AABB.h
@@ -116,6 +117,16 @@ add_subdirectory(${RELATIVE_EXT_PATH}/tinygltf ${DEPENDENCY_BUILD_DIR_NAME}/tiny
 target_link_libraries(${PROJECT_NAME} PUBLIC tinygltf)
 set_target_properties(tinygltf PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 add_dependencies(${PROJECT_NAME} tinygltf)
+
+# External: xxHash
+message(STATUS "${PROJECT_NAME}: adding external dependency \"xxHash\"...")
+set(XXHASH_TARGET_NAME xxHash)
+add_library(${XXHASH_TARGET_NAME} STATIC
+    ${RELATIVE_EXT_PATH}/xxHash/xxhash.c
+    ${RELATIVE_EXT_PATH}/xxHash/xxhash.h)
+set_target_properties(${XXHASH_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})
+add_dependencies(${PROJECT_NAME} ${XXHASH_TARGET_NAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${XXHASH_TARGET_NAME})
 
 # Add "GLM".
 message(STATUS "${PROJECT_NAME}: adding external dependency \"GLM\"...")
