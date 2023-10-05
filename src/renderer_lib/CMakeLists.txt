@@ -165,3 +165,9 @@ target_include_directories(${IMGUI_TARGET_NAME} SYSTEM PUBLIC ${RELATIVE_EXT_PAT
 set_target_properties(${IMGUI_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})
 add_dependencies(${PROJECT_NAME} ${IMGUI_TARGET_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${IMGUI_TARGET_NAME})
+
+# External: portable-file-dialogs
+message(STATUS "${PROJECT_NAME}: adding external dependency \"portable-file-dialogs\"...")
+add_subdirectory(${RELATIVE_EXT_PATH}/portable-file-dialogs ${DEPENDENCY_BUILD_DIR_NAME}/portable-file-dialogs SYSTEM)
+target_link_libraries(${PROJECT_NAME} PUBLIC portable_file_dialogs)
+set_target_properties(portable_file_dialogs PROPERTIES FOLDER ${EXTERNAL_FOLDER})

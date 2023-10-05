@@ -121,11 +121,9 @@ void Application::run() {
     pCamera->setCameraMovementSpeed(10.0F); // NOLINT
 
     initWindow();
-
     setupImGui();
-
     initOpenGl();
-    prepareScene();
+
     mainLoop();
 
     shutdownImGui();
@@ -218,6 +216,12 @@ void Application::mainLoop() {
         // Process window events.
         glfwPollEvents();
 
+        // Start drawing the Dear ImGui frame.
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGuiWindow::drawWindow(this);
+
         // Notify camera.
         currentTimeInSec = static_cast<float>(glfwGetTime());
         pCamera->onBeforeNewFrame(currentTimeInSec - prevTimeInSec);
@@ -225,14 +229,21 @@ void Application::mainLoop() {
 
         drawNextFrame();
 
+        // Finish drawing the Dear ImGui frame.
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         // Swap back/front buffers.
         glfwSwapBuffers(pGLFWWindow);
     }
 }
 
-void Application::prepareScene() {
+void Application::prepareScene(const std::filesystem::path& pathToModel) {
+    // Clear current scene.
+    meshesToDraw.clear();
+
     // Import meshes from file.
-    auto vImportedMeshes = MeshImporter::importMesh("res/mesh.glb");
+    auto vImportedMeshes = MeshImporter::importMesh(pathToModel);
 
     // See which macros we need to define.
     std::unordered_set<ShaderProgramMacro> macros;
@@ -267,17 +278,14 @@ void Application::prepareScene() {
         meshesToDraw[macros].meshes.insert(std::move(pMesh));
     }
 
-    // Set camera's position.
+    // Set camera's position/rotation.
     pCamera->setLocation(glm::vec3(0.0F, 0.0F, cameraDistance * 2));
+    pCamera->setFreeCameraRotation(glm::vec3(0.0F, 0.0F, -1.0F));
 }
 
-void Application::drawNextFrame() {
-    // Start drawing the Dear ImGui frame.
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGuiWindow::drawWindow(stats.iFramesPerSecond);
+Application::ProfilingStatistics* Application::getProfilingStats() { return &stats; }
 
+void Application::drawNextFrame() {
     // Clear color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -341,10 +349,6 @@ void Application::drawNextFrame() {
             glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
         }
     }
-
-    // Finish drawing the Dear ImGui frame.
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     onFrameSubmitted();
 }

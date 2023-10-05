@@ -28,6 +28,15 @@ struct ShaderMeshGroup {
 /** Basic OpenGL application. */
 class Application {
 public:
+    /** Groups various statistics such as FPS. */
+    struct ProfilingStatistics {
+        /** The total number of frames drawn last second. */
+        size_t iFramesPerSecond = 0;
+
+        /** Last time when @ref iFramesPerSecond was updated. */
+        std::chrono::steady_clock::time_point timeAtLastFpsUpdate = std::chrono::steady_clock::now();
+    };
+
     /**
      * Loads the specified image and returns its ID.
      *
@@ -42,16 +51,25 @@ public:
     /** Runs the application. */
     void run();
 
+    /**
+     * Prepares a scene with meshes to draw (fills @ref meshesToDraw).
+     *
+     * @remark Clears old displayed models (if existed).
+     *
+     * @param pathToModel Path to the file to import and display.
+     */
+    void prepareScene(const std::filesystem::path& pathToModel);
+
+    /**
+     * Returns app statistics.
+     *
+     * @remark Do not delete (free) returned pointer.
+     *
+     * @return App statistics.
+     */
+    ProfilingStatistics* getProfilingStats();
+
 private:
-    /** Groups various statistics such as FPS. */
-    struct ProfilingStatistics {
-        /** The total number of frames drawn last second. */
-        size_t iFramesPerSecond = 0;
-
-        /** Last time when @ref iFramesPerSecond was updated. */
-        std::chrono::steady_clock::time_point timeAtLastFpsUpdate = std::chrono::steady_clock::now();
-    };
-
     /**
      * GLFW callback that's called after the framebuffer size was changed.
      *
@@ -127,9 +145,6 @@ private:
 
     /** Processes window messages and does the rendering. */
     void mainLoop();
-
-    /** Prepares a scene with meshes to draw (fills @ref meshesToDraw).  */
-    void prepareScene();
 
     /** Draws next frame. */
     void drawNextFrame();
