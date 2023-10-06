@@ -72,7 +72,54 @@ public:
      */
     ProfilingStatistics* getProfilingStats();
 
+    /**
+     * Value for ImGui slider to modify rotation.
+     *
+     * @return Pointer that points to the start of the model rotation vector that will be applied.
+     */
+    float* getModelRotationToApply();
+
+    /**
+     * Returns light source position to be modified in ImGui slider.
+     *
+     * @return Pointer that points to the start of the light position vector.
+     */
+    float* getLightSourcePosition();
+
+    /** Whether we need to flip the texture vertically during the import or not. */
+    static bool bFlipTexturesVertically;
+
 private:
+    /**
+     * Sets the specified matrix to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param matrix           Matrix to set.
+     */
+    static void setMatrix4ToShader(
+        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat4x4& matrix);
+
+    /**
+     * Sets the specified matrix to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param matrix           Matrix to set.
+     */
+    static void setMatrix3ToShader(
+        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix);
+
+    /**
+     * Sets the specified vector to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param vector           Vector to set.
+     */
+    static void setVectorToShader(
+        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector);
+
     /**
      * GLFW callback that's called after the framebuffer size was changed.
      *
@@ -124,6 +171,13 @@ private:
     static unsigned int compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader);
 
     /**
+     * Sets rotation of all displayed (imported) meshes.
+     *
+     * @param rotation Rotation.
+     */
+    void setModelRotation(const glm::vec2& rotation);
+
+    /**
      * Setups the Dear ImGui library.
      *
      * @warning Expects that @ref pGLFWWindow is initialized.
@@ -163,6 +217,13 @@ private:
     /** Updates @ref stats. */
     void onFrameSubmitted();
 
+    /**
+     * Rotation for all displayed (imported) models to apply.
+     *
+     * @remark Modified from ImGui slider.
+     */
+    glm::vec2 modelRotationToApply = glm::vec2(0.0F, 0.0F);
+
     /** Virtual camera. */
     std::unique_ptr<Camera> pCamera;
 
@@ -172,6 +233,12 @@ private:
         ShaderMeshGroup,
         ShaderProgramMacroUnorderedSetHash>
         meshesToDraw;
+
+    /** Position of the light source. */
+    glm::vec3 lightPosition = glm::vec3(0.0F, 0.0F, 0.0F);
+
+    /** Color of the light source. */
+    glm::vec3 lightColor = glm::vec3(1.0F, 1.0F, 1.0F);
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

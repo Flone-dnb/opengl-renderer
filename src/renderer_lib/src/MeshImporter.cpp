@@ -176,6 +176,41 @@ inline void processGltfMesh( // NOLINT: too complex
                 continue;
             }
 
+            if (sAttributeName == "NORMAL") {
+                using normal_t = glm::vec3;
+
+                // Make sure normal is stored as `vec3`.
+                if (attributeAccessor.type != TINYGLTF_TYPE_VEC3) [[unlikely]] {
+                    throw std::runtime_error(std::format(
+                        "expected NORMAL mesh attribute to be stored as `vec3`, actual type: {}",
+                        attributeAccessor.type));
+                }
+                // Make sure that component type is `float`.
+                if (attributeAccessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) [[unlikely]] {
+                    throw std::runtime_error(std::format(
+                        "expected NORMAL mesh attribute component type to be `float`, actual type: {}",
+                        attributeAccessor.componentType));
+                }
+
+                // Prepare variables.
+                auto pCurrentNormal = attributeBuffer.data.data() + attributeBufferView.byteOffset +
+                                      attributeAccessor.byteOffset;
+                const auto iStride =
+                    attributeBufferView.byteStride == 0 ? sizeof(normal_t) : attributeBufferView.byteStride;
+
+                // Set normals to mesh data.
+                for (size_t i = 0; i < vVertices.size(); i++) {
+                    // Set value.
+                    vVertices[i].normal = reinterpret_cast<const normal_t*>(pCurrentNormal)[0];
+
+                    // Switch to the next item.
+                    pCurrentNormal += iStride;
+                }
+
+                // Process next attribute.
+                continue;
+            }
+
             if (sAttributeName == "TEXCOORD_0") {
                 using uv_t = glm::vec2;
 

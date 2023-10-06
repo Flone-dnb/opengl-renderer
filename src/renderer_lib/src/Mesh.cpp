@@ -10,6 +10,7 @@
 void Vertex::setVertexAttributes() {
     // Prepare offsets of fields.
     const auto iPositionOffset = offsetof(Vertex, position);
+    const auto iNormalOffset = offsetof(Vertex, normal);
     const auto iUvOffset = offsetof(Vertex, uv);
 
     // Specify position.
@@ -22,10 +23,20 @@ void Vertex::setVertexAttributes() {
         sizeof(Vertex),                            // stride (size in bytes between elements)
         reinterpret_cast<void*>(iPositionOffset)); // NOLINT: beginning offset
 
-    // Specify UV.
+    // Specify normal.
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(
-        1,                                   // attribute index (layout location)
+        1,                                       // attribute index (layout location)
+        3,                                       // number of components
+        GL_FLOAT,                                // type of component
+        GL_FALSE,                                // whether data should be normalized or not
+        sizeof(Vertex),                          // stride (size in bytes between elements)
+        reinterpret_cast<void*>(iNormalOffset)); // NOLINT: beginning offset
+
+    // Specify UV.
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(
+        2,                                   // attribute index (layout location)
         2,                                   // number of components
         GL_FLOAT,                            // type of component
         GL_FALSE,                            // whether data should be normalized or not
@@ -50,7 +61,7 @@ Mesh::~Mesh() {
     glDeleteTextures(1, &iDiffuseTextureId);
 
 #if defined(DEBUG)
-    static_assert(sizeof(Mesh) == 108, "add new resources to be deleted"); // NOLINT
+    static_assert(sizeof(Mesh) == 144, "add new resources to be deleted"); // NOLINT
 #endif
 }
 
@@ -64,6 +75,9 @@ std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<
     pMesh->prepareVertexBuffer(std::move(vVertices));
     pMesh->prepareIndexBuffer(std::move(vIndices));
 
+    // Prepare normal matrix.
+    pMesh->normalMatrix = getNormalMatrixFromWorldMatrix(pMesh->worldMatrix);
+
     return pMesh;
 }
 
@@ -73,6 +87,22 @@ void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
 
     // Create new texture.
     iDiffuseTextureId = Application::loadTexture(pathToImageFile);
+}
+
+void Mesh::setWorldMatrix(const glm::mat4x4& newWorldMatrix) {
+    // Save new world matrix.
+    worldMatrix = newWorldMatrix;
+
+    // Update normal matrix.
+    normalMatrix = getNormalMatrixFromWorldMatrix(worldMatrix);
+}
+
+glm::mat4x4* Mesh::getWorldMatrix() { return &worldMatrix; }
+
+glm::mat3x3* Mesh::getNormalMatrix() { return &normalMatrix; }
+
+glm::mat3x3 Mesh::getNormalMatrixFromWorldMatrix(const glm::mat4x4& worldMatrix) {
+    return glm::mat3x3(glm::transpose(glm::inverse(worldMatrix)));
 }
 
 void Mesh::prepareVertexBuffer(std::vector<Vertex>&& vVertices) {

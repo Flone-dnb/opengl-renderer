@@ -18,6 +18,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+bool Application::bFlipTexturesVertically = false;
+
 void GLAPIENTRY opengGlMessageCallback(
     GLenum source,
     GLenum type,
@@ -85,7 +87,7 @@ unsigned int Application::loadTexture(const std::filesystem::path& pathToImage) 
     const auto iGlFormat = GL_RGB;
 
     // Flip images vertically when loading.
-    stbi_set_flip_vertically_on_load(1);
+    stbi_set_flip_vertically_on_load(static_cast<int>(bFlipTexturesVertically));
 
     // Load image pixels.
     int iWidth = 0;
@@ -222,6 +224,9 @@ void Application::mainLoop() {
         ImGui::NewFrame();
         ImGuiWindow::drawWindow(this);
 
+        // Apply rotation from ImGui slider.
+        setModelRotation(modelRotationToApply);
+
         // Notify camera.
         currentTimeInSec = static_cast<float>(glfwGetTime());
         pCamera->onBeforeNewFrame(currentTimeInSec - prevTimeInSec);
@@ -281,9 +286,61 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
     // Set camera's position/rotation.
     pCamera->setLocation(glm::vec3(0.0F, 0.0F, cameraDistance * 2));
     pCamera->setFreeCameraRotation(glm::vec3(0.0F, 0.0F, -1.0F));
+
+    // Set light source position.
+    lightPosition = glm::vec3(cameraDistance * 2, cameraDistance * 2, cameraDistance * 2);
+}
+
+void Application::setModelRotation(const glm::vec2& rotation) {
+    for (const auto& [macros, shader] : meshesToDraw) {
+        for (const auto& pMesh : shader.meshes) {
+            pMesh->setWorldMatrix(
+                MathHelpers::buildRotationMatrix(glm::vec3(rotation, 0.0F)) * glm::identity<glm::mat4x4>());
+        }
+    }
 }
 
 Application::ProfilingStatistics* Application::getProfilingStats() { return &stats; }
+
+float* Application::getModelRotationToApply() { return glm::value_ptr(modelRotationToApply); }
+
+float* Application::getLightSourcePosition() { return glm::value_ptr(lightPosition); }
+
+void Application::setMatrix3ToShader(
+    unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix) {
+    // Get uniform location.
+    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
+    if (iLocation < 0) [[unlikely]] {
+        throw std::runtime_error(std::format("unable to get location for matrix \"{}\"", sUniformName));
+    }
+
+    // Set matrix.
+    glUniformMatrix3fv(iLocation, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+void Application::setMatrix4ToShader(
+    unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat4x4& matrix) {
+    // Get uniform location.
+    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
+    if (iLocation < 0) [[unlikely]] {
+        throw std::runtime_error(std::format("unable to get location for matrix \"{}\"", sUniformName));
+    }
+
+    // Set matrix.
+    glUniformMatrix4fv(iLocation, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+void Application::setVectorToShader(
+    unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector) {
+    // Get uniform location.
+    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
+    if (iLocation < 0) [[unlikely]] {
+        throw std::runtime_error(std::format("unable to get location for vector \"{}\"", sUniformName));
+    }
+
+    // Set vector.
+    glUniform3fv(iLocation, 1, glm::value_ptr(vector));
+}
 
 void Application::drawNextFrame() {
     // Refresh culled object counter.
@@ -294,35 +351,31 @@ void Application::drawNextFrame() {
 
     // Draw meshes of each shader variation.
     for (const auto& [macros, shader] : meshesToDraw) {
+        // Set shader program.
         glUseProgram(shader.iShaderProgramId);
+
+        // Set light position/color.
+        setVectorToShader(shader.iShaderProgramId, "lightPosition", lightPosition);
+        setVectorToShader(shader.iShaderProgramId, "lightColor", lightColor);
 
         // Get view and projection matrices.
         const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
         const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
 
         // Set view/projection matrix.
-        const auto iViewProjectionMatrixLocation =
-            glGetUniformLocation(shader.iShaderProgramId, "viewProjectionMatrix");
-        if (iViewProjectionMatrixLocation < 0) [[unlikely]] {
-            throw std::runtime_error("unable to get location for view/projection matrix");
-        }
-        const auto viewProjectionMatrix = projectionMatrix * viewMatrix;
-        glUniformMatrix4fv(iViewProjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
+        setMatrix4ToShader(shader.iShaderProgramId, "viewProjectionMatrix", projectionMatrix * viewMatrix);
 
         for (const auto& mesh : shader.meshes) {
             // Do frustum culling.
             if (!pCamera->getCameraProperties()->getCameraFrustum()->isAabbInFrustum(
-                    mesh->aabb, mesh->worldMatrix)) {
+                    mesh->aabb, *mesh->getWorldMatrix())) {
                 stats.iCulledObjectsLastFrame += 1;
                 continue;
             }
 
-            // Set world matrix.
-            const auto iWorldMatrixLocation = glGetUniformLocation(shader.iShaderProgramId, "worldMatrix");
-            if (iWorldMatrixLocation < 0) [[unlikely]] {
-                throw std::runtime_error("unable to get location for world matrix");
-            }
-            glUniformMatrix4fv(iWorldMatrixLocation, 1, GL_FALSE, glm::value_ptr(mesh->worldMatrix));
+            // Set world/normal matrix.
+            setMatrix4ToShader(shader.iShaderProgramId, "worldMatrix", *mesh->getWorldMatrix());
+            setMatrix3ToShader(shader.iShaderProgramId, "normalMatrix", *mesh->getNormalMatrix());
 
             // Set vertex array object.
             glBindVertexArray(mesh->iVertexArrayObjectId);
@@ -595,6 +648,19 @@ void Application::setupImGui() {
     // Setup Platform/Renderer backends.
     ImGui_ImplGlfw_InitForOpenGL(pGLFWWindow, true);
     ImGui_ImplOpenGL3_Init();
+
+    // Scale UI (source: https://gist.github.com/benpm/21afb58f2c8dfdbf881ca90c76ad602e)
+    float monScaleX = 0.0F;
+    float monScaleY = 0.0F;
+    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &monScaleX, &monScaleY);
+    int dpiScale = std::max((int)monScaleX, (int)monScaleY);
+    ImGui::GetStyle().ScaleAllSizes((float)dpiScale);
+    ImGui::GetIO().FontGlobalScale = (float)dpiScale;
+    ImFontConfig fontConfig;
+    fontConfig.OversampleH = 2;
+    fontConfig.OversampleV = 2;
+    fontConfig.SizePixels = 16.0f * dpiScale; // NOLINT
+    ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
 }
 
 void Application::shutdownImGui() {
