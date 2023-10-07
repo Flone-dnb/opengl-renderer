@@ -33,6 +33,8 @@ set(PROJECT_SOURCES
     src/GLFW.hpp
     src/Globals.hpp
     src/ShaderProgramMacro.hpp
+    src/LightSource.h
+    src/LightSource.cpp
     src/MathHelpers.hpp
     src/shapes/AABB.cpp
     src/shapes/AABB.h

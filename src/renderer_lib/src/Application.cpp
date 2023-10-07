@@ -288,7 +288,7 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
     pCamera->setFreeCameraRotation(glm::vec3(0.0F, 0.0F, -1.0F));
 
     // Set light source position.
-    lightPosition = glm::vec3(cameraDistance * 2, cameraDistance * 2, cameraDistance * 2);
+    lightSource.setLightPosition(glm::vec3(cameraDistance * 2, cameraDistance * 2, cameraDistance * 2));
 }
 
 void Application::setModelRotation(const glm::vec2& rotation) {
@@ -304,7 +304,7 @@ Application::ProfilingStatistics* Application::getProfilingStats() { return &sta
 
 float* Application::getModelRotationToApply() { return glm::value_ptr(modelRotationToApply); }
 
-float* Application::getLightSourcePosition() { return glm::value_ptr(lightPosition); }
+float* Application::getLightSourcePosition() { return lightSource.getLightPosition(); }
 
 void Application::setMatrix3ToShader(
     unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix) {
@@ -366,12 +366,11 @@ void Application::drawNextFrame() {
         // Set shader program.
         glUseProgram(shader.iShaderProgramId);
 
-        // Set light position/color.
-        setVector3ToShader(shader.iShaderProgramId, "lightPosition", lightPosition);
-        setVector3ToShader(shader.iShaderProgramId, "lightColor", lightColor);
-
         // Set ambient color.
         setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
+
+        // Set light properties.
+        lightSource.setToShader(shader.iShaderProgramId);
 
         // Set camera position.
         setVector3ToShader(
@@ -386,6 +385,7 @@ void Application::drawNextFrame() {
         // Set view/projection matrix.
         setMatrix4ToShader(shader.iShaderProgramId, "viewProjectionMatrix", projectionMatrix * viewMatrix);
 
+        // Draw meshes.
         for (const auto& mesh : shader.meshes) {
             // Do frustum culling.
             if (!pCamera->getCameraProperties()->getCameraFrustum()->isAabbInFrustum(

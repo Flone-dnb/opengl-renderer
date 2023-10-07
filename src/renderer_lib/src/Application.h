@@ -13,6 +13,7 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "ShaderProgramMacro.hpp"
+#include "LightSource.h"
 
 struct GLFWwindow;
 
@@ -243,11 +244,8 @@ private:
         ShaderProgramMacroUnorderedSetHash>
         meshesToDraw;
 
-    /** Position of the light source. */
-    glm::vec3 lightPosition = glm::vec3(0.0F, 0.0F, 0.0F);
-
-    /** Color of the light source. */
-    glm::vec3 lightColor = glm::vec3(1.0F, 1.0F, 1.0F);
+    /** Scene's light source. */
+    LightSource lightSource;
 
     /** Color of the ambient lighting. */
     glm::vec3 ambientColor = glm::vec3(0.1F, 0.1F, 0.1F); // NOLINT
