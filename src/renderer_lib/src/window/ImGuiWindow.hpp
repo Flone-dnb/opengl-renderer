@@ -5,6 +5,7 @@
 
 // Custom.
 #include "Application.h"
+#include "import/TextureImporter.h"
 
 // External.
 #include "imgui.h"
@@ -36,7 +37,7 @@ public:
         {
             ImGui::SeparatorText("Import");
 
-            ImGui::Checkbox("flip textures vertically", &Application::bFlipTexturesVertically);
+            ImGui::Checkbox("flip textures vertically", &TextureImporter::bFlipTexturesVertically);
 
             if (ImGui::Button("select GLTF/GLB file to display")) {
                 const auto vPickedPaths = pfd::open_file(

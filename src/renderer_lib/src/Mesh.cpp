@@ -6,6 +6,7 @@
 // Custom.
 #include "window/GLFW.hpp"
 #include "Application.h"
+#include "import/TextureImporter.h"
 
 void Vertex::setVertexAttributes() {
     // Prepare offsets of fields.
@@ -86,7 +87,7 @@ void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
     glDeleteTextures(1, &material.iDiffuseTextureId);
 
     // Create new texture.
-    material.iDiffuseTextureId = Application::loadTexture(pathToImageFile);
+    material.iDiffuseTextureId = TextureImporter::loadTexture(pathToImageFile);
 }
 
 void Mesh::setWorldMatrix(const glm::mat4x4& newWorldMatrix) {

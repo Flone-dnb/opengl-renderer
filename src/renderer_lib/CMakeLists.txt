@@ -23,8 +23,10 @@ set(PROJECT_SOURCES
     src/Application.cpp
     src/Mesh.h
     src/Mesh.cpp
-    src/MeshImporter.h
-    src/MeshImporter.cpp
+    src/import/MeshImporter.h
+    src/import/MeshImporter.cpp
+    src/import/TextureImporter.cpp
+    src/import/TextureImporter.h
     src/camera/CameraProperties.h
     src/camera/CameraProperties.cpp
     src/camera/Camera.h

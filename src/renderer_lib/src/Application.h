@@ -42,17 +42,6 @@ public:
     };
 
     /**
-     * Loads the specified image and returns its ID.
-     *
-     * @remark Expects that OpenGL is initialized.
-     *
-     * @param pathToImage
-     *
-     * @return Loaded image ID.
-     */
-    static unsigned int loadTexture(const std::filesystem::path& pathToImage);
-
-    /**
      * Sets the specified matrix to a `uniform` with the specified name in shaders.
      *
      * @param iShaderProgramId ID of the shader program to modify.
@@ -125,9 +114,6 @@ public:
      * @return Pointer that points to the start of the light position vector.
      */
     float* getLightSourcePosition();
-
-    /** Whether we need to flip the texture vertically during the import or not. */
-    static bool bFlipTexturesVertically;
 
 private:
     /**
