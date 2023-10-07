@@ -31,7 +31,8 @@ set(PROJECT_SOURCES
     src/camera/Camera.cpp
     src/math/GLMath.hpp
     src/math/MathHelpers.hpp
-    src/GLFW.hpp
+    src/window/GLFW.hpp
+    src/window/ImGuiWindow.hpp
     src/Globals.hpp
     src/ShaderProgramMacro.hpp
     src/LightSource.h
@@ -42,7 +43,6 @@ set(PROJECT_SOURCES
     src/shapes/Frustum.cpp
     src/shapes/Plane.h
     src/shapes/Plane.cpp
-    src/ImGuiWindow.hpp
     # add your .h/.cpp files here
 )
 

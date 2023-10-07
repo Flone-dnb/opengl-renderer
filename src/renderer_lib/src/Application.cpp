@@ -6,10 +6,10 @@
 #include <fstream>
 
 // Custom.
-#include "GLFW.hpp"
+#include "window/GLFW.hpp"
 #include "ShaderIncluder.h"
 #include "MeshImporter.h"
-#include "ImGuiWindow.hpp"
+#include "window/ImGuiWindow.hpp"
 
 // External.
 #define STB_IMAGE_IMPLEMENTATION

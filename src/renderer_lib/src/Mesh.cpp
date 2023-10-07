@@ -4,7 +4,7 @@
 #include <format>
 
 // Custom.
-#include "GLFW.hpp"
+#include "window/GLFW.hpp"
 #include "Application.h"
 
 void Vertex::setVertexAttributes() {
