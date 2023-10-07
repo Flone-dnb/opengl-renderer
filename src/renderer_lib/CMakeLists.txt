@@ -165,6 +165,7 @@ add_library(${IMGUI_TARGET_NAME} STATIC
     ${RELATIVE_EXT_PATH}/imgui/backends/imgui_impl_glfw.h
     ${RELATIVE_EXT_PATH}/imgui/backends/imgui_impl_opengl3.h
 )
+target_include_directories(${IMGUI_TARGET_NAME} SYSTEM PRIVATE ${RELATIVE_EXT_PATH}/glfw/include)
 target_include_directories(${IMGUI_TARGET_NAME} SYSTEM PUBLIC ${RELATIVE_EXT_PATH}/imgui)
 target_include_directories(${IMGUI_TARGET_NAME} SYSTEM PUBLIC ${RELATIVE_EXT_PATH}/imgui/backends)
 set_target_properties(${IMGUI_TARGET_NAME} PROPERTIES FOLDER ${EXTERNAL_FOLDER})

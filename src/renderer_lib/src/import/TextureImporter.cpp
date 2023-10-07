@@ -12,7 +12,7 @@
 
 bool TextureImporter::bFlipTexturesVertically = false;
 
-unsigned int TextureImporter::loadTexture(const std::filesystem::__cxx11::path& pathToImage) {
+unsigned int TextureImporter::loadTexture(const std::filesystem::path& pathToImage) {
     // Make sure the specified path exists.
     if (!std::filesystem::exists(pathToImage)) [[unlikely]] {
         throw std::runtime_error(
