@@ -5,7 +5,7 @@
 
 // Custom.
 #include "window/GLFW.hpp"
-#include "Application.h"
+#include "shader/ShaderUniformHelpers.hpp"
 #include "import/TextureImporter.h"
 
 void Vertex::setVertexAttributes() {
@@ -185,11 +185,11 @@ void Material::setToShader(unsigned int iShaderProgramId) const {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, maxSupportedAnisotropy);
 
     // Set diffuse color.
-    Application::setVector3ToShader(iShaderProgramId, "material.diffuseColor", diffuseColor);
+    ShaderUniformHelpers::setVector3ToShader(iShaderProgramId, "material.diffuseColor", diffuseColor);
 
     // Set specular color.
-    Application::setVector3ToShader(iShaderProgramId, "material.specularColor", specularColor);
+    ShaderUniformHelpers::setVector3ToShader(iShaderProgramId, "material.specularColor", specularColor);
 
     // Set shininess.
-    Application::setFloatToShader(iShaderProgramId, "material.shininess", shininess);
+    ShaderUniformHelpers::setFloatToShader(iShaderProgramId, "material.shininess", shininess);
 }

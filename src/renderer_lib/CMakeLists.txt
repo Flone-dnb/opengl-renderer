@@ -36,7 +36,8 @@ set(PROJECT_SOURCES
     src/window/GLFW.hpp
     src/window/ImGuiWindow.hpp
     src/Globals.hpp
-    src/ShaderProgramMacro.hpp
+    src/shader/ShaderProgramMacro.hpp
+    src/shader/ShaderUniformHelpers.hpp
     src/LightSource.h
     src/LightSource.cpp
     src/shapes/AABB.cpp

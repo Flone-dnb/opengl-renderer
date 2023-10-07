@@ -12,7 +12,7 @@
 #include "math/GLMath.hpp"
 #include "camera/Camera.h"
 #include "Mesh.h"
-#include "ShaderProgramMacro.hpp"
+#include "shader/ShaderProgramMacro.hpp"
 #include "LightSource.h"
 
 struct GLFWwindow;
@@ -40,45 +40,6 @@ public:
         /** Last time when @ref iFramesPerSecond was updated. */
         std::chrono::steady_clock::time_point timeAtLastFpsUpdate = std::chrono::steady_clock::now();
     };
-
-    /**
-     * Sets the specified matrix to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param matrix           Matrix to set.
-     */
-    static void setMatrix4ToShader(
-        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat4x4& matrix);
-
-    /**
-     * Sets the specified matrix to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param matrix           Matrix to set.
-     */
-    static void setMatrix3ToShader(
-        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix);
-
-    /**
-     * Sets the specified vector to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param vector           Vector to set.
-     */
-    static void setVector3ToShader(
-        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector);
-
-    /**
-     * Sets the specified float value to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param value            Value to set.
-     */
-    static void setFloatToShader(unsigned int iShaderProgramId, const std::string& sUniformName, float value);
 
     /** Runs the application. */
     void run();
@@ -166,6 +127,12 @@ private:
      */
     static unsigned int compileShader(const std::filesystem::path& pathToShader, bool bIsVertexShader);
 
+    /** Initializes rendering. */
+    static void initOpenGl();
+
+    /** Deinitializes the Dear ImGui library after @ref setupImGui. */
+    static void shutdownImGui();
+
     /**
      * Sets rotation of all displayed (imported) meshes.
      *
@@ -180,9 +147,6 @@ private:
      */
     void setupImGui();
 
-    /** Deinitializes the Dear ImGui library after @ref setupImGui. */
-    static void shutdownImGui();
-
     /**
      * Changes cursor's visibility.
      *
@@ -192,9 +156,6 @@ private:
 
     /** Initializes GLFW. */
     void initWindow();
-
-    /** Initializes rendering. */
-    static void initOpenGl();
 
     /** Processes window messages and does the rendering. */
     void mainLoop();

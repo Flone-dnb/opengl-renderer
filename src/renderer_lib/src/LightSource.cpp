@@ -1,11 +1,11 @@
 #include "LightSource.h"
 
 // Custom.
-#include "Application.h"
+#include "shader/ShaderUniformHelpers.hpp"
 
 void LightSource::setToShader(unsigned int iShaderProgramId) const {
-    Application::setVector3ToShader(iShaderProgramId, "lightSource.position", position);
-    Application::setVector3ToShader(iShaderProgramId, "lightSource.color", color);
+    ShaderUniformHelpers::setVector3ToShader(iShaderProgramId, "lightSource.position", position);
+    ShaderUniformHelpers::setVector3ToShader(iShaderProgramId, "lightSource.color", color);
 }
 
 void LightSource::setLightPosition(const glm::vec3& position) { this->position = position; }

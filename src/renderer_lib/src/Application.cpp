@@ -10,6 +10,7 @@
 #include "ShaderIncluder.h"
 #include "import/MeshImporter.h"
 #include "window/ImGuiWindow.hpp"
+#include "shader/ShaderUniformHelpers.hpp"
 
 // External.
 #include "imgui.h"
@@ -260,54 +261,6 @@ float* Application::getModelRotationToApply() { return glm::value_ptr(modelRotat
 
 float* Application::getLightSourcePosition() { return lightSource.getLightPosition(); }
 
-void Application::setMatrix3ToShader(
-    unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix) {
-    // Get uniform location.
-    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
-    if (iLocation < 0) [[unlikely]] {
-        throw std::runtime_error(std::format("unable to get location for matrix \"{}\"", sUniformName));
-    }
-
-    // Set matrix.
-    glUniformMatrix3fv(iLocation, 1, GL_FALSE, glm::value_ptr(matrix));
-}
-
-void Application::setMatrix4ToShader(
-    unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat4x4& matrix) {
-    // Get uniform location.
-    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
-    if (iLocation < 0) [[unlikely]] {
-        throw std::runtime_error(std::format("unable to get location for matrix \"{}\"", sUniformName));
-    }
-
-    // Set matrix.
-    glUniformMatrix4fv(iLocation, 1, GL_FALSE, glm::value_ptr(matrix));
-}
-
-void Application::setVector3ToShader(
-    unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector) {
-    // Get uniform location.
-    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
-    if (iLocation < 0) [[unlikely]] {
-        throw std::runtime_error(std::format("unable to get location for vector \"{}\"", sUniformName));
-    }
-
-    // Set vector.
-    glUniform3fv(iLocation, 1, glm::value_ptr(vector));
-}
-
-void Application::setFloatToShader(
-    unsigned int iShaderProgramId, const std::string& sUniformName, float value) {
-    // Get uniform location.
-    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
-    if (iLocation < 0) [[unlikely]] {
-        throw std::runtime_error(std::format("unable to get location for float \"{}\"", sUniformName));
-    }
-
-    // Set vector.
-    glUniform1f(iLocation, value);
-}
-
 void Application::drawNextFrame() {
     // Refresh culled object counter.
     stats.iCulledObjectsLastFrame = 0;
@@ -321,13 +274,13 @@ void Application::drawNextFrame() {
         glUseProgram(shader.iShaderProgramId);
 
         // Set ambient color.
-        setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
+        ShaderUniformHelpers::setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
 
         // Set light properties.
         lightSource.setToShader(shader.iShaderProgramId);
 
         // Set camera position.
-        setVector3ToShader(
+        ShaderUniformHelpers::setVector3ToShader(
             shader.iShaderProgramId,
             "cameraPositionInWorldSpace",
             pCamera->getCameraProperties()->getWorldLocation());
@@ -337,7 +290,8 @@ void Application::drawNextFrame() {
         const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
 
         // Set view/projection matrix.
-        setMatrix4ToShader(shader.iShaderProgramId, "viewProjectionMatrix", projectionMatrix * viewMatrix);
+        ShaderUniformHelpers::setMatrix4ToShader(
+            shader.iShaderProgramId, "viewProjectionMatrix", projectionMatrix * viewMatrix);
 
         // Draw meshes.
         for (const auto& mesh : shader.meshes) {
@@ -349,8 +303,10 @@ void Application::drawNextFrame() {
             }
 
             // Set world/normal matrix.
-            setMatrix4ToShader(shader.iShaderProgramId, "worldMatrix", *mesh->getWorldMatrix());
-            setMatrix3ToShader(shader.iShaderProgramId, "normalMatrix", *mesh->getNormalMatrix());
+            ShaderUniformHelpers::setMatrix4ToShader(
+                shader.iShaderProgramId, "worldMatrix", *mesh->getWorldMatrix());
+            ShaderUniformHelpers::setMatrix3ToShader(
+                shader.iShaderProgramId, "normalMatrix", *mesh->getNormalMatrix());
 
             // Set vertex array object.
             glBindVertexArray(mesh->iVertexArrayObjectId);
