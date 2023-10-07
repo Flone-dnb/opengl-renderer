@@ -10,7 +10,7 @@
 
 // Custom.
 #include "GLMath.hpp"
-#include "Camera.h"
+#include "camera/Camera.h"
 #include "Mesh.h"
 #include "ShaderProgramMacro.hpp"
 #include "LightSource.h"

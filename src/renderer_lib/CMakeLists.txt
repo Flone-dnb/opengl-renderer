@@ -25,10 +25,10 @@ set(PROJECT_SOURCES
     src/Mesh.cpp
     src/MeshImporter.h
     src/MeshImporter.cpp
-    src/CameraProperties.h
-    src/CameraProperties.cpp
-    src/Camera.h
-    src/Camera.cpp
+    src/camera/CameraProperties.h
+    src/camera/CameraProperties.cpp
+    src/camera/Camera.h
+    src/camera/Camera.cpp
     src/GLMath.hpp
     src/GLFW.hpp
     src/Globals.hpp
