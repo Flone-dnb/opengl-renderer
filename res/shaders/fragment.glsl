@@ -10,11 +10,15 @@ layout(binding = 0) uniform sampler2D diffuseTexture;
 
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
+uniform vec3 cameraPositionInWorldSpace;
 
 out vec4 color;
 
 void main()
 {
+    // Normals may be unnormalized after the rasterization (when they are interpolated).
+    vec3 fragmentNormalUnit = normalize(fragmentNormal);
+    
     // Define base color.
     color = vec4(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -23,19 +27,22 @@ void main()
     color *= texture(diffuseTexture, fragmentUv);
 #endif
 
-    // Prepare ambient color.
+    // Prepare ambient color and specular reflection intencity.
     vec3 ambientColor = vec3(0.1F, 0.1F, 0.1F);
-
-    // Normals may be unnormalized after the rasterization (when they are interpolated).
-    vec3 normal = normalize(fragmentNormal);
-
-    // Calculate direction (in world space) to light source from our fragment.
-    vec3 toLightDirection = normalize(lightPosition - fragmentPosition);
+    float specularStrength = 0.5F;
 
     // Calculate diffuse color.
-    float cosFragmentToLight = max(dot(normal, toLightDirection), 0.0F);
+    vec3 fragmentToLightDirectionUnit = normalize(lightPosition - fragmentPosition);
+    float cosFragmentToLight = max(dot(fragmentNormalUnit, fragmentToLightDirectionUnit), 0.0F);
     vec3 diffuseColor = cosFragmentToLight * lightColor;
 
-    // Apply ambient + diffuse color.
-    color.xyz *= ambientColor + diffuseColor;
+    // Calculate specular color.
+    vec3 fragmentLightReflectionDirectionUnit = reflect(-fragmentToLightDirectionUnit, fragmentNormalUnit);
+    vec3 fragmentToCameraDirectionUnit = normalize(cameraPositionInWorldSpace - fragmentPosition);
+    int shininess = 32;
+    float specularFactor = pow(max(dot(fragmentToCameraDirectionUnit, fragmentLightReflectionDirectionUnit), 0.0), shininess);
+    vec3 specularColor = specularStrength * specularFactor * lightColor;
+
+    // Apply calculated light.
+    color.xyz *= ambientColor + diffuseColor + specularColor;
 } 

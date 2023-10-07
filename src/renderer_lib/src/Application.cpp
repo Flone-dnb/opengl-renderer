@@ -358,6 +358,12 @@ void Application::drawNextFrame() {
         setVectorToShader(shader.iShaderProgramId, "lightPosition", lightPosition);
         setVectorToShader(shader.iShaderProgramId, "lightColor", lightColor);
 
+        // Set camera position.
+        setVectorToShader(
+            shader.iShaderProgramId,
+            "cameraPositionInWorldSpace",
+            pCamera->getCameraProperties()->getWorldLocation());
+
         // Get view and projection matrices.
         const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
         const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
