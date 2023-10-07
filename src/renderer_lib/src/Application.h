@@ -51,6 +51,45 @@ public:
      */
     static unsigned int loadTexture(const std::filesystem::path& pathToImage);
 
+    /**
+     * Sets the specified matrix to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param matrix           Matrix to set.
+     */
+    static void setMatrix4ToShader(
+        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat4x4& matrix);
+
+    /**
+     * Sets the specified matrix to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param matrix           Matrix to set.
+     */
+    static void setMatrix3ToShader(
+        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix);
+
+    /**
+     * Sets the specified vector to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param vector           Vector to set.
+     */
+    static void setVector3ToShader(
+        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector);
+
+    /**
+     * Sets the specified float value to a `uniform` with the specified name in shaders.
+     *
+     * @param iShaderProgramId ID of the shader program to modify.
+     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
+     * @param value            Value to set.
+     */
+    static void setFloatToShader(unsigned int iShaderProgramId, const std::string& sUniformName, float value);
+
     /** Runs the application. */
     void run();
 
@@ -90,36 +129,6 @@ public:
     static bool bFlipTexturesVertically;
 
 private:
-    /**
-     * Sets the specified matrix to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param matrix           Matrix to set.
-     */
-    static void setMatrix4ToShader(
-        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat4x4& matrix);
-
-    /**
-     * Sets the specified matrix to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param matrix           Matrix to set.
-     */
-    static void setMatrix3ToShader(
-        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::mat3x3& matrix);
-
-    /**
-     * Sets the specified vector to a `uniform` with the specified name in shaders.
-     *
-     * @param iShaderProgramId ID of the shader program to modify.
-     * @param sUniformName     Name of the `uniform` from shaders to set the matrix to.
-     * @param vector           Vector to set.
-     */
-    static void setVectorToShader(
-        unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector);
-
     /**
      * GLFW callback that's called after the framebuffer size was changed.
      *
@@ -239,6 +248,9 @@ private:
 
     /** Color of the light source. */
     glm::vec3 lightColor = glm::vec3(1.0F, 1.0F, 1.0F);
+
+    /** Color of the ambient lighting. */
+    glm::vec3 ambientColor = glm::vec3(0.1F, 0.1F, 0.1F); // NOLINT
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

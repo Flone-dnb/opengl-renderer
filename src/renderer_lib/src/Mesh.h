@@ -9,6 +9,28 @@
 #include "GLMath.hpp"
 #include "shapes/AABB.h"
 
+/** Determines material properties of a mesh. */
+struct Material {
+    /**
+     * Sets material's properties to the specified shader.
+     *
+     * @param iShaderProgramId Shader program to set material's properties to.
+     */
+    void setToShader(unsigned int iShaderProgramId) const;
+
+    /** ID of the diffuse texture (if used). */
+    unsigned int iDiffuseTextureId = 0;
+
+    /** Diffuse light color. */
+    glm::vec3 diffuseColor = glm::vec3(1.0F, 1.0F, 1.0F);
+
+    /** Specular light color. */
+    glm::vec3 specularColor = glm::vec3(1.0F, 1.0F, 1.0F);
+
+    /** Determines how shiny the surface is. */
+    float shininess = 32.0F; // NOLINT
+};
+
 /** Groups information about one vertex. */
 struct Vertex {
     /** Describes to OpenGL how vertex data should be interpreted. */
@@ -71,6 +93,9 @@ struct Mesh {
      */
     glm::mat3x3* getNormalMatrix();
 
+    /** Mesh's material. */
+    Material material;
+
     /** Mesh's AABB in model space. */
     AABB aabb;
 
@@ -82,9 +107,6 @@ struct Mesh {
 
     /** Total number of indices in the mesh. */
     int iIndexCount = 0;
-
-    /** ID of the diffuse texture. */
-    unsigned int iDiffuseTextureId = 0;
 
 private:
     /**

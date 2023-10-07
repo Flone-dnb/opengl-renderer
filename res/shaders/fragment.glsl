@@ -11,6 +11,15 @@ layout(binding = 0) uniform sampler2D diffuseTexture;
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
 uniform vec3 cameraPositionInWorldSpace;
+uniform vec3 ambientColor;
+
+struct Material {
+    vec3 diffuseColor;
+    vec3 specularColor;
+    float shininess;
+}; 
+
+uniform Material material;
 
 out vec4 color;
 
@@ -27,22 +36,17 @@ void main()
     color *= texture(diffuseTexture, fragmentUv);
 #endif
 
-    // Prepare ambient color and specular reflection intencity.
-    vec3 ambientColor = vec3(0.1F, 0.1F, 0.1F);
-    float specularStrength = 0.5F;
-
     // Calculate diffuse color.
     vec3 fragmentToLightDirectionUnit = normalize(lightPosition - fragmentPosition);
     float cosFragmentToLight = max(dot(fragmentNormalUnit, fragmentToLightDirectionUnit), 0.0F);
-    vec3 diffuseColor = cosFragmentToLight * lightColor;
+    vec3 diffuseLight = (cosFragmentToLight * material.diffuseColor) * lightColor;
 
     // Calculate specular color.
     vec3 fragmentLightReflectionDirectionUnit = reflect(-fragmentToLightDirectionUnit, fragmentNormalUnit);
     vec3 fragmentToCameraDirectionUnit = normalize(cameraPositionInWorldSpace - fragmentPosition);
-    int shininess = 32;
-    float specularFactor = pow(max(dot(fragmentToCameraDirectionUnit, fragmentLightReflectionDirectionUnit), 0.0), shininess);
-    vec3 specularColor = specularStrength * specularFactor * lightColor;
+    float specularFactor = pow(max(dot(fragmentToCameraDirectionUnit, fragmentLightReflectionDirectionUnit), 0.0), material.shininess);
+    vec3 specularColor = lightColor * (specularFactor * material.specularColor);
 
     // Apply calculated light.
-    color.xyz *= ambientColor + diffuseColor + specularColor;
+    color.xyz *= ambientColor + diffuseLight + specularColor;
 } 

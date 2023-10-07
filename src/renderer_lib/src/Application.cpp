@@ -253,7 +253,7 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
     // See which macros we need to define.
     std::unordered_set<ShaderProgramMacro> macros;
     for (const auto& pMesh : vImportedMeshes) {
-        if (pMesh->iDiffuseTextureId > 0) {
+        if (pMesh->material.iDiffuseTextureId > 0) {
             macros.insert(ShaderProgramMacro::USE_DIFFUSE_TEXTURE);
         }
     }
@@ -330,7 +330,7 @@ void Application::setMatrix4ToShader(
     glUniformMatrix4fv(iLocation, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-void Application::setVectorToShader(
+void Application::setVector3ToShader(
     unsigned int iShaderProgramId, const std::string& sUniformName, const glm::vec3& vector) {
     // Get uniform location.
     const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
@@ -340,6 +340,18 @@ void Application::setVectorToShader(
 
     // Set vector.
     glUniform3fv(iLocation, 1, glm::value_ptr(vector));
+}
+
+void Application::setFloatToShader(
+    unsigned int iShaderProgramId, const std::string& sUniformName, float value) {
+    // Get uniform location.
+    const auto iLocation = glGetUniformLocation(iShaderProgramId, sUniformName.c_str());
+    if (iLocation < 0) [[unlikely]] {
+        throw std::runtime_error(std::format("unable to get location for float \"{}\"", sUniformName));
+    }
+
+    // Set vector.
+    glUniform1f(iLocation, value);
 }
 
 void Application::drawNextFrame() {
@@ -355,11 +367,14 @@ void Application::drawNextFrame() {
         glUseProgram(shader.iShaderProgramId);
 
         // Set light position/color.
-        setVectorToShader(shader.iShaderProgramId, "lightPosition", lightPosition);
-        setVectorToShader(shader.iShaderProgramId, "lightColor", lightColor);
+        setVector3ToShader(shader.iShaderProgramId, "lightPosition", lightPosition);
+        setVector3ToShader(shader.iShaderProgramId, "lightColor", lightColor);
+
+        // Set ambient color.
+        setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
 
         // Set camera position.
-        setVectorToShader(
+        setVector3ToShader(
             shader.iShaderProgramId,
             "cameraPositionInWorldSpace",
             pCamera->getCameraProperties()->getWorldLocation());
@@ -389,24 +404,8 @@ void Application::drawNextFrame() {
             // Set element object.
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->iIndexBufferObjectId);
 
-            // Set diffuse texture at texture unit (location) 0.
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, mesh->iDiffuseTextureId);
-
-            // Set texture wrapping.
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-            // Set texture filtering.
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(
-                GL_TEXTURE_2D,
-                GL_TEXTURE_MAG_FILTER,
-                GL_LINEAR); // no need to set `MIPMAP` option since magnification does not use mipmaps
-
-            // Enable anisotropic texture filtering (core in OpenGL 4.6 which we are using).
-            float maxSupportedAnisotropy = 0.0F;
-            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxSupportedAnisotropy);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, maxSupportedAnisotropy);
+            // Set material properties.
+            mesh->material.setToShader(shader.iShaderProgramId);
 
             // Submit a draw command.
             glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);

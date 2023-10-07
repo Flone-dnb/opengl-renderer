@@ -58,10 +58,10 @@ Mesh::~Mesh() {
     glDeleteBuffers(1, &iIndexBufferObjectId);
 
     // Delete texture.
-    glDeleteTextures(1, &iDiffuseTextureId);
+    glDeleteTextures(1, &material.iDiffuseTextureId);
 
 #if defined(DEBUG)
-    static_assert(sizeof(Mesh) == 144, "add new resources to be deleted"); // NOLINT
+    static_assert(sizeof(Mesh) == 172, "add new resources to be deleted"); // NOLINT
 #endif
 }
 
@@ -83,10 +83,10 @@ std::unique_ptr<Mesh> Mesh::create(std::vector<Vertex>&& vVertices, std::vector<
 
 void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
     // Delete previous texture.
-    glDeleteTextures(1, &iDiffuseTextureId);
+    glDeleteTextures(1, &material.iDiffuseTextureId);
 
     // Create new texture.
-    iDiffuseTextureId = Application::loadTexture(pathToImageFile);
+    material.iDiffuseTextureId = Application::loadTexture(pathToImageFile);
 }
 
 void Mesh::setWorldMatrix(const glm::mat4x4& newWorldMatrix) {
@@ -161,4 +161,34 @@ void Mesh::prepareIndexBuffer(std::vector<unsigned int>&& vIndices) {
 
     // Finished with index buffer.
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Material::setToShader(unsigned int iShaderProgramId) const {
+    // Set diffuse texture at texture unit (location) 0.
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, iDiffuseTextureId);
+
+    // Set texture wrapping.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Set texture filtering.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR); // no need to set `MIPMAP` option since magnification does not use mipmaps
+
+    // Enable anisotropic texture filtering (core in OpenGL 4.6 which we are using).
+    float maxSupportedAnisotropy = 0.0F;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxSupportedAnisotropy);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, maxSupportedAnisotropy);
+
+    // Set diffuse color.
+    Application::setVector3ToShader(iShaderProgramId, "material.diffuseColor", diffuseColor);
+
+    // Set specular color.
+    Application::setVector3ToShader(iShaderProgramId, "material.specularColor", specularColor);
+
+    // Set shininess.
+    Application::setFloatToShader(iShaderProgramId, "material.shininess", shininess);
 }
