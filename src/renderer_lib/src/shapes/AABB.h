@@ -4,7 +4,7 @@
 #include <vector>
 
 // Custom.
-#include "../GLMath.hpp"
+#include "math/GLMath.hpp"
 #include "shapes/Plane.h"
 
 struct Vertex;

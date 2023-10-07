@@ -1,7 +1,7 @@
 #pragma once
 
 // Custom.
-#include "GLMath.hpp"
+#include "math/GLMath.hpp"
 
 /** Represents a single light source. */
 class LightSource {

@@ -1,7 +1,7 @@
 #include "Frustum.h"
 
 // Custom.
-#include "../Globals.hpp"
+#include "Globals.hpp"
 
 bool Frustum::isAabbInFrustum(const AABB& aabbInModelSpace, const glm::mat4x4& worldMatrix) const {
     // Before comparing frustum faces against AABB we need to take care of something:

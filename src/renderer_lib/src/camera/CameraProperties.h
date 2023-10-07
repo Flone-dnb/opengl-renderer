@@ -5,7 +5,7 @@
 #include <optional>
 
 // Custom.
-#include "GLMath.hpp"
+#include "math/GLMath.hpp"
 #include "Globals.hpp"
 #include "shapes/Frustum.h"
 

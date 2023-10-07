@@ -1,7 +1,7 @@
 #pragma once
 
 // Custom.
-#include "../GLMath.hpp"
+#include "math/GLMath.hpp"
 
 /** Plane represented by a normal and a distance. */
 struct Plane {

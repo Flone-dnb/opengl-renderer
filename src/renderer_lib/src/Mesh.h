@@ -6,7 +6,7 @@
 #include <memory>
 
 // Custom.
-#include "GLMath.hpp"
+#include "math/GLMath.hpp"
 #include "shapes/AABB.h"
 
 /** Determines material properties of a mesh. */

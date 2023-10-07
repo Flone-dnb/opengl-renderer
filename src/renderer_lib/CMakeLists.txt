@@ -29,13 +29,13 @@ set(PROJECT_SOURCES
     src/camera/CameraProperties.cpp
     src/camera/Camera.h
     src/camera/Camera.cpp
-    src/GLMath.hpp
+    src/math/GLMath.hpp
+    src/math/MathHelpers.hpp
     src/GLFW.hpp
     src/Globals.hpp
     src/ShaderProgramMacro.hpp
     src/LightSource.h
     src/LightSource.cpp
-    src/MathHelpers.hpp
     src/shapes/AABB.cpp
     src/shapes/AABB.h
     src/shapes/Frustum.h

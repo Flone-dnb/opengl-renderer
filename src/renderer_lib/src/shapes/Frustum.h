@@ -1,7 +1,7 @@
 #pragma once
 
 // Custom.
-#include "../GLMath.hpp"
+#include "math/GLMath.hpp"
 #include "shapes/Plane.h"
 #include "shapes/AABB.h"
 

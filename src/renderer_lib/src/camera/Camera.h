@@ -2,8 +2,8 @@
 
 // Custom.
 #include "CameraProperties.h"
-#include "GLMath.hpp"
-#include "MathHelpers.hpp"
+#include "math/GLMath.hpp"
+#include "math/MathHelpers.hpp"
 
 /** Virtual camera. */
 class Camera {

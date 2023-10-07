@@ -9,7 +9,7 @@
 #include <unordered_set>
 
 // Custom.
-#include "GLMath.hpp"
+#include "math/GLMath.hpp"
 #include "camera/Camera.h"
 #include "Mesh.h"
 #include "ShaderProgramMacro.hpp"
