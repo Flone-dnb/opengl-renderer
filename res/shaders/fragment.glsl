@@ -34,15 +34,17 @@ void main()
     // Define base color.
     color = vec4(1.0F, 1.0F, 1.0F, 1.0F);
 
-    // Apply texture color.
+    // Save diffuse color.
 #ifdef USE_DIFFUSE_TEXTURE
-    color *= texture(diffuseTexture, fragmentUv);
+    vec3 fragmentDiffuseColor = vec3(texture(diffuseTexture, fragmentUv));
+#else
+    vec3 fragmentDiffuseColor = material.diffuseColor;
 #endif
 
     // Calculate diffuse color.
     vec3 fragmentToLightDirectionUnit = normalize(lightSource.position - fragmentPosition);
     float cosFragmentToLight = max(dot(fragmentNormalUnit, fragmentToLightDirectionUnit), 0.0F);
-    vec3 diffuseLight = (cosFragmentToLight * material.diffuseColor) * lightSource.color;
+    vec3 diffuseLight = cosFragmentToLight * fragmentDiffuseColor * lightSource.color;
 
     // Calculate specular color.
     vec3 fragmentLightReflectionDirectionUnit = reflect(-fragmentToLightDirectionUnit, fragmentNormalUnit);
