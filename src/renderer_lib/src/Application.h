@@ -195,7 +195,7 @@ private:
     LightSource lightSource;
 
     /** Color of the ambient lighting. */
-    glm::vec3 ambientColor = glm::vec3(0.1F, 0.1F, 0.1F); // NOLINT
+    glm::vec3 ambientColor = glm::vec3(0.05F, 0.05F, 0.05F); // NOLINT
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

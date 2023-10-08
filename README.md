@@ -2,6 +2,7 @@
 
 - [X] GLB/GLTF import.
 - [X] Frustum culling.
+- [X] Point lights.
 
 # Setup (Build)
 

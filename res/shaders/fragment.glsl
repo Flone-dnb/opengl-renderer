@@ -13,6 +13,8 @@ struct Material {
 struct LightSource{
     vec3 position;
     vec3 color;
+    float intensity;
+    float distance;
 };
 
 #ifdef USE_DIFFUSE_TEXTURE
@@ -29,6 +31,11 @@ uniform Material material;
 uniform LightSource lightSource;
 
 out vec4 color;
+
+float calculatePointLightAttenuation(float distanceToLight, float lightIntensity, float lightHalfRadius){
+    float distanceToLightDivHalfRadius = distanceToLight / lightHalfRadius;
+    return lightIntensity / (1 + distanceToLightDivHalfRadius * distanceToLightDivHalfRadius);
+}
 
 void main()
 {
@@ -50,16 +57,24 @@ void main()
     fragmentSpecularColor *= vec3(1.0F - texture(metallicRoughnessTexture, fragmentUv).y);
 #endif
 
+    // Calculate light attenuation.
+    float fragmentDistanceToLight = length(lightSource.position - fragmentPosition);
+    vec3 attenuatedLightColor =
+        lightSource.color * calculatePointLightAttenuation(
+            fragmentDistanceToLight, lightSource.intensity, lightSource.distance);
+
     // Calculate diffuse color.
     vec3 fragmentToLightDirectionUnit = normalize(lightSource.position - fragmentPosition);
     float cosFragmentToLight = max(dot(fragmentNormalUnit, fragmentToLightDirectionUnit), 0.0F);
-    vec3 diffuseLight = cosFragmentToLight * fragmentDiffuseColor * lightSource.color;
+    vec3 diffuseLight = cosFragmentToLight * fragmentDiffuseColor * attenuatedLightColor;
 
     // Calculate specular color.
     vec3 fragmentLightReflectionDirectionUnit = reflect(-fragmentToLightDirectionUnit, fragmentNormalUnit);
     vec3 fragmentToCameraDirectionUnit = normalize(cameraPositionInWorldSpace - fragmentPosition);
-    float specularFactor = pow(max(dot(fragmentToCameraDirectionUnit, fragmentLightReflectionDirectionUnit), 0.0), material.shininess);
-    vec3 specularColor = lightSource.color * (specularFactor * fragmentSpecularColor);
+    float specularFactor =
+        pow(max(dot(fragmentToCameraDirectionUnit, fragmentLightReflectionDirectionUnit), 0.0),
+            material.shininess);
+    vec3 specularColor = attenuatedLightColor * (specularFactor * fragmentSpecularColor);
 
     // Apply calculated light.
     color.xyz *= ambientColor + diffuseLight + specularColor;
