@@ -1,7 +1,3 @@
-# Controls
-
-Hold right mouse button to rotate the camera and use WASDEQ keys (while still holding right mouse button) to move.
-
 # Features
 
 - [X] GLB/GLTF import.

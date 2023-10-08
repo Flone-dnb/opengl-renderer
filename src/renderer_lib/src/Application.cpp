@@ -347,8 +347,11 @@ void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMac
                                                    // multi-threaded shader compilation
 
     // Create a temporary file with defined macros.
-    const auto sPathToMacrosFile = std::string("res/shaders/defined_macros.glsl");
-    std::ofstream macrosFile(sPathToMacrosFile);
+    const auto sPathToMacrosFile = std::filesystem::path("res/shaders/defined_macros.glsl");
+    if (!std::filesystem::exists(sPathToMacrosFile.parent_path())) [[unlikely]] {
+        throw std::runtime_error("expected the directory for shader resources to exist");
+    }
+    std::ofstream macrosFile(sPathToMacrosFile.string());
     if (!macrosFile.is_open()) [[unlikely]] {
         throw std::runtime_error("failed to create a file for predefined shader macros");
     }
@@ -563,6 +566,8 @@ void Application::setupImGui() {
     // Setup Platform/Renderer backends.
     ImGui_ImplGlfw_InitForOpenGL(pGLFWWindow, true);
     ImGui_ImplOpenGL3_Init();
+
+#undef max
 
     // Scale UI (source: https://gist.github.com/benpm/21afb58f2c8dfdbf881ca90c76ad602e)
     float monScaleX = 0.0F;

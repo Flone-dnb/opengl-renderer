@@ -42,7 +42,7 @@ public:
             if (ImGui::Button("select GLTF/GLB file to display")) {
                 const auto vPickedPaths = pfd::open_file(
                                               "Select GLTF/GLB file to display",
-                                              std::filesystem::current_path(),
+                                              std::filesystem::current_path().string(),
                                               {"GLTF (*.gltf *.glb)"},
                                               pfd::opt::none)
                                               .result();
