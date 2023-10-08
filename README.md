@@ -2,7 +2,6 @@
 
 - [X] GLB/GLTF import.
 - [X] Frustum culling.
-- [X] Diffuse textures.
 
 # Setup (Build)
 

@@ -11,6 +11,7 @@
 /** Describes a macro that should be defined in GLSL shader. */
 enum class ShaderProgramMacro : unsigned int {
     USE_DIFFUSE_TEXTURE,
+    USE_METALLIC_ROUGHNESS_TEXTURE,
     // ... new macros go here, DON'T FORGET to add them to `macroToText` function ...
 };
 
@@ -18,6 +19,9 @@ inline std::string macroToText(ShaderProgramMacro macro) {
     switch (macro) {
     case (ShaderProgramMacro::USE_DIFFUSE_TEXTURE): {
         return "USE_DIFFUSE_TEXTURE";
+    }
+    case (ShaderProgramMacro::USE_METALLIC_ROUGHNESS_TEXTURE): {
+        return "USE_METALLIC_ROUGHNESS_TEXTURE";
     }
     }
 

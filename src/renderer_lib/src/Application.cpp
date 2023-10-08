@@ -211,6 +211,9 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
         if (pMesh->material.iDiffuseTextureId > 0) {
             macros.insert(ShaderProgramMacro::USE_DIFFUSE_TEXTURE);
         }
+        if (pMesh->material.iMetallicRoughnessTextureId > 0) {
+            macros.insert(ShaderProgramMacro::USE_METALLIC_ROUGHNESS_TEXTURE);
+        }
     }
 
     // Prepare shader program for the specified macros.
@@ -356,7 +359,7 @@ void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMac
         throw std::runtime_error("failed to create a file for predefined shader macros");
     }
     for (const auto& macro : macros) {
-        macrosFile << "#define " + macroToText(macro);
+        macrosFile << "#define " + macroToText(macro) + "\n";
     }
     macrosFile.close();
 

@@ -18,8 +18,14 @@ struct Material {
      */
     void setToShader(unsigned int iShaderProgramId) const;
 
+    /** Sets texture 2D parameters for the currently active Texture_2D such as texture wrapping/filtering. */
+    static void setTexture2dParameters();
+
     /** ID of the diffuse texture (if used). */
     unsigned int iDiffuseTextureId = 0;
+
+    /** ID of the metallic (blue) + roughness (green) texture (if used). */
+    unsigned int iMetallicRoughnessTextureId = 0;
 
     /** Diffuse light color. */
     glm::vec3 diffuseColor = glm::vec3(1.0F, 1.0F, 1.0F);
@@ -71,6 +77,14 @@ struct Mesh {
      * @param pathToImageFile Path to the image file to use.
      */
     void setDiffuseTexture(const std::filesystem::path& pathToImageFile);
+
+    /**
+     * Assigns the specified texture where the roughness values are sampled from the Green channel and
+     * the metalness values are sampled from the Blue channel.
+     *
+     * @param pathToImageFile Path to the image file to use.
+     */
+    void setMetallicRoughnessTexture(const std::filesystem::path& pathToImageFile);
 
     /**
      * Sets new world matrix to be used.
