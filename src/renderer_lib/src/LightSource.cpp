@@ -6,11 +6,15 @@
 // Custom.
 #include "shader/ShaderUniformHelpers.hpp"
 
-void LightSource::setToShader(unsigned int iShaderProgramId) const {
-    ShaderUniformHelpers::setVector3ToShader(iShaderProgramId, "lightSource.position", position);
-    ShaderUniformHelpers::setVector3ToShader(iShaderProgramId, "lightSource.color", color);
-    ShaderUniformHelpers::setFloatToShader(iShaderProgramId, "lightSource.intensity", intensity);
-    ShaderUniformHelpers::setFloatToShader(iShaderProgramId, "lightSource.distance", distance);
+void LightSource::setToShader(unsigned int iShaderProgramId, size_t iLightSourceIndex) const {
+    ShaderUniformHelpers::setVector3ToShader(
+        iShaderProgramId, std::format("vLightSources[{}].position", iLightSourceIndex), position);
+    ShaderUniformHelpers::setVector3ToShader(
+        iShaderProgramId, std::format("vLightSources[{}].color", iLightSourceIndex), color);
+    ShaderUniformHelpers::setFloatToShader(
+        iShaderProgramId, std::format("vLightSources[{}].intensity", iLightSourceIndex), intensity);
+    ShaderUniformHelpers::setFloatToShader(
+        iShaderProgramId, std::format("vLightSources[{}].distance", iLightSourceIndex), distance);
 }
 
 void LightSource::setLightPosition(const glm::vec3& position) { this->position = position; }

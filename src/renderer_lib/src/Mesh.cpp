@@ -91,7 +91,7 @@ void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
     material.iDiffuseTextureId = TextureImporter::loadTexture(pathToImageFile);
 }
 
-void Mesh::setMetallicRoughnessTexture(const std::filesystem::__cxx11::path& pathToImageFile) {
+void Mesh::setMetallicRoughnessTexture(const std::filesystem::path& pathToImageFile) {
     // Delete previous texture.
     glDeleteTextures(1, &material.iMetallicRoughnessTextureId);
 

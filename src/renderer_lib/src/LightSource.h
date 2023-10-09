@@ -9,9 +9,11 @@ public:
     /**
      * Sets light properties to the specified shader program.
      *
-     * @param iShaderProgramId Shader program to set light source properties to.
+     * @param iShaderProgramId  Shader program to set light source properties to.
+     * @param iLightSourceIndex Index of this light source to copy the properties to the specified light
+     * source in the array of lights (in shaders).
      */
-    void setToShader(unsigned int iShaderProgramId) const;
+    void setToShader(unsigned int iShaderProgramId, size_t iLightSourceIndex) const;
 
     /**
      * Sets light source position in world space.

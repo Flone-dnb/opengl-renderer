@@ -70,11 +70,18 @@ public:
     float* getModelRotationToApply();
 
     /**
-     * Returns light source position to be modified in ImGui slider.
+     * Returns first light source's position to be modified in ImGui slider.
      *
      * @return Pointer that points to the start of the light position vector.
      */
-    float* getLightSourcePosition();
+    float* getFirstLightSourcePosition();
+
+    /**
+     * Returns second light source's position to be modified in ImGui slider.
+     *
+     * @return Pointer that points to the start of the light position vector.
+     */
+    float* getSecondLightSourcePosition();
 
 private:
     /**
@@ -191,8 +198,12 @@ private:
         ShaderProgramMacroUnorderedSetHash>
         meshesToDraw;
 
-    /** Scene's light source. */
-    LightSource lightSource;
+    /**
+     * Scene's light sources.
+     *
+     * @warning Total number of light sources is equal to the number from shaders.
+     */
+    std::array<LightSource, 2> vLightSources;
 
     /** Color of the ambient lighting. */
     glm::vec3 ambientColor = glm::vec3(0.05F, 0.05F, 0.05F); // NOLINT

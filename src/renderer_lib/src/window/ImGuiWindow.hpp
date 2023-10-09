@@ -68,7 +68,10 @@ public:
 
             ImGui::SeparatorText("Lighting");
 
-            ImGui::SliderFloat3("light position", pApp->getLightSourcePosition(), -30.0F, 30.0F); // NOLINT
+            ImGui::SliderFloat3(
+                "light #1 position", pApp->getFirstLightSourcePosition(), -30.0F, 30.0F); // NOLINT
+            ImGui::SliderFloat3(
+                "light #2 position", pApp->getSecondLightSourcePosition(), -30.0F, 30.0F); // NOLINT
 
             ImGui::SeparatorText("Statistics");
 

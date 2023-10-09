@@ -246,7 +246,9 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
     pCamera->setFreeCameraRotation(glm::vec3(0.0F, 0.0F, -1.0F));
 
     // Set light source position.
-    lightSource.setLightPosition(glm::vec3(cameraDistance * 2, cameraDistance * 2, cameraDistance * 2));
+    vLightSources[0].setLightPosition(glm::vec3(cameraDistance * 2, cameraDistance * 2, cameraDistance * 2));
+    vLightSources[1].setLightPosition(
+        glm::vec3(-cameraDistance * 2, -cameraDistance * 2, -cameraDistance * 2));
 }
 
 void Application::setModelRotation(const glm::vec2& rotation) {
@@ -262,7 +264,9 @@ Application::ProfilingStatistics* Application::getProfilingStats() { return &sta
 
 float* Application::getModelRotationToApply() { return glm::value_ptr(modelRotationToApply); }
 
-float* Application::getLightSourcePosition() { return lightSource.getLightPosition(); }
+float* Application::getFirstLightSourcePosition() { return vLightSources[0].getLightPosition(); }
+
+float* Application::getSecondLightSourcePosition() { return vLightSources[1].getLightPosition(); }
 
 void Application::drawNextFrame() {
     // Refresh culled object counter.
@@ -280,7 +284,9 @@ void Application::drawNextFrame() {
         ShaderUniformHelpers::setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
 
         // Set light properties.
-        lightSource.setToShader(shader.iShaderProgramId);
+        for (size_t i = 0; i < vLightSources.size(); i++) {
+            vLightSources[i].setToShader(shader.iShaderProgramId, i);
+        }
 
         // Set camera position.
         ShaderUniformHelpers::setVector3ToShader(

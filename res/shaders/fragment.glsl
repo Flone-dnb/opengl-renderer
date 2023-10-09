@@ -25,10 +25,12 @@ layout(binding = 0) uniform sampler2D diffuseTexture;
 layout(binding = 1) uniform sampler2D metallicRoughnessTexture;
 #endif
 
+#define LIGHT_COUNT 2
+
 uniform vec3 cameraPositionInWorldSpace;
 uniform vec3 ambientColor;
 uniform Material material;
-uniform LightSource lightSource;
+uniform LightSource vLightSources[LIGHT_COUNT];
 
 out vec4 color;
 
@@ -37,26 +39,7 @@ float calculatePointLightAttenuation(float distanceToLight, float lightIntensity
     return lightIntensity / (1 + distanceToLightDivHalfRadius * distanceToLightDivHalfRadius);
 }
 
-void main()
-{
-    // Normals may be unnormalized after the rasterization (when they are interpolated).
-    vec3 fragmentNormalUnit = normalize(fragmentNormal);
-    
-    // Define base color.
-    color = vec4(1.0F, 1.0F, 1.0F, 1.0F);
-
-    // Prepare diffuse color.
-    vec3 fragmentDiffuseColor = material.diffuseColor;
-#ifdef USE_DIFFUSE_TEXTURE
-    fragmentDiffuseColor *= vec3(texture(diffuseTexture, fragmentUv));
-#endif
-
-    // Prepare specular color.
-    vec3 fragmentSpecularColor = material.specularColor;
-#ifdef USE_METALLIC_ROUGHNESS_TEXTURE
-    fragmentSpecularColor *= vec3(1.0F - texture(metallicRoughnessTexture, fragmentUv).y);
-#endif
-
+vec3 calculateColorFromLight(LightSource lightSource, vec3 fragmentNormalUnit, vec3 fragmentDiffuseColor, vec3 fragmentSpecularColor){
     // Calculate light attenuation.
     float fragmentDistanceToLight = length(lightSource.position - fragmentPosition);
     vec3 attenuatedLightColor =
@@ -76,6 +59,31 @@ void main()
             material.shininess);
     vec3 specularColor = attenuatedLightColor * (specularFactor * fragmentSpecularColor);
 
-    // Apply calculated light.
-    color.xyz *= ambientColor + diffuseLight + specularColor;
+    return ambientColor + diffuseLight + specularColor;
+}
+
+void main()
+{
+    // Normals may be unnormalized after the rasterization (when they are interpolated).
+    vec3 fragmentNormalUnit = normalize(fragmentNormal);
+    
+    // Define base (unlit) color.
+    color = vec4(0.0F, 0.0F, 0.0F, 1.0F);
+
+    // Prepare diffuse color.
+    vec3 fragmentDiffuseColor = material.diffuseColor;
+#ifdef USE_DIFFUSE_TEXTURE
+    fragmentDiffuseColor *= vec3(texture(diffuseTexture, fragmentUv));
+#endif
+
+    // Prepare specular color.
+    vec3 fragmentSpecularColor = material.specularColor;
+#ifdef USE_METALLIC_ROUGHNESS_TEXTURE
+    fragmentSpecularColor *= vec3(1.0F - texture(metallicRoughnessTexture, fragmentUv).y);
+#endif
+
+    // Calculate total light received.
+    for (int i = 0; i < LIGHT_COUNT; i++){
+        color.xyz += calculateColorFromLight(vLightSources[i], fragmentNormalUnit, fragmentDiffuseColor, fragmentSpecularColor);
+    }
 } 
