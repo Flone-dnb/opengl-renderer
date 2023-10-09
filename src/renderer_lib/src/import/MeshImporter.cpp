@@ -133,7 +133,6 @@ inline void processGltfMesh( // NOLINT: too complex
         }
 
         // Process attributes.
-        size_t iProcessedAttributeCount = 0;
         for (auto& [sAttributeName, iAccessorIndex] : primitive.attributes) {
             // Get attribute accessor.
             const auto& attributeAccessor = model.accessors[iAccessorIndex];
@@ -381,9 +380,6 @@ std::vector<std::unique_ptr<Mesh>> MeshImporter::importMesh(const std::filesyste
         throw std::runtime_error(
             "there was an error during the import process but no error message was received");
     }
-
-    // Prepare variable for processed nodes.
-    size_t iTotalNodeProcessedCount = 0;
 
     // Get default scene.
     const auto& scene = model.scenes[model.defaultScene];

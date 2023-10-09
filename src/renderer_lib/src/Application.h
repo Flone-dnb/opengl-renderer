@@ -141,6 +141,13 @@ private:
     static void shutdownImGui();
 
     /**
+     * Compiles shader used to render skybox.
+     *
+     * @return ID of the compiled shader program.
+     */
+    static unsigned int compileSkyboxShaderProgram();
+
+    /**
      * Sets rotation of all displayed (imported) meshes.
      *
      * @param rotation Rotation.
@@ -204,6 +211,15 @@ private:
      * @warning Total number of light sources is equal to the number from shaders.
      */
     std::array<LightSource, 2> vLightSources;
+
+    /** Mesh that holds skybox cubemap. */
+    std::unique_ptr<Mesh> pSkyboxMesh;
+
+    /** ID of the shader used to render skybox. */
+    unsigned int iSkyboxShaderProgramId = 0;
+
+    /** ID of the cubemap texture used for skybox. */
+    unsigned int iSkyboxCubemapId = 0;
 
     /** Color of the ambient lighting. */
     glm::vec3 ambientColor = glm::vec3(0.05F, 0.05F, 0.05F); // NOLINT

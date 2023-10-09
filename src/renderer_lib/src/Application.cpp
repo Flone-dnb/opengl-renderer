@@ -81,6 +81,11 @@ void Application::run() {
     setupImGui();
     initOpenGl();
 
+    // Prepare environment map.
+    iSkyboxCubemapId = TextureImporter::loadCubemap("res/skybox");
+    iSkyboxShaderProgramId = compileSkyboxShaderProgram();
+    pSkyboxMesh = std::move(MeshImporter::importMesh("res/skybox/skybox.glb")[0]);
+
     mainLoop();
 
     shutdownImGui();
@@ -275,6 +280,10 @@ void Application::drawNextFrame() {
     // Clear color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Get view and projection matrices.
+    const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
+    const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
+
     // Draw meshes of each shader variation.
     for (const auto& [macros, shader] : meshesToDraw) {
         // Set shader program.
@@ -293,10 +302,6 @@ void Application::drawNextFrame() {
             shader.iShaderProgramId,
             "cameraPositionInWorldSpace",
             pCamera->getCameraProperties()->getWorldLocation());
-
-        // Get view and projection matrices.
-        const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
-        const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
 
         // Set view/projection matrix.
         ShaderUniformHelpers::setMatrix4ToShader(
@@ -330,6 +335,37 @@ void Application::drawNextFrame() {
             glDrawElements(GL_TRIANGLES, mesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
         }
     }
+
+    // Set shader program.
+    glUseProgram(iSkyboxShaderProgramId);
+
+    // Bind cubemap.
+    glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
+
+    // Set view/projection matrix.
+    ShaderUniformHelpers::setMatrix4ToShader(
+        iSkyboxShaderProgramId,
+        "viewProjectionMatrix",
+        projectionMatrix * glm::mat4(glm::mat3(
+                               viewMatrix))); // remove translation to make skybox centered on camera location
+
+    // Set vertex array object.
+    glBindVertexArray(pSkyboxMesh->iVertexArrayObjectId);
+
+    // Set element object.
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pSkyboxMesh->iIndexBufferObjectId);
+
+    // Disable backface culling to render cubemap (because the camera will be inside of that cube).
+    glCullFace(GL_FRONT);
+    glDepthFunc(GL_LEQUAL); // change depth comparison to <=1.0F to render skybox because it has 1.0 depth
+                            // (see shaders)
+
+    // Submit a draw command.
+    glDrawElements(GL_TRIANGLES, pSkyboxMesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
+
+    // Return backface culling and depth comparison function.
+    glCullFace(GL_BACK);
+    glDepthFunc(GL_LESS); // restore depth comparison function
 
     onFrameSubmitted();
 }
@@ -400,6 +436,37 @@ void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMac
     // Delete shaders since we don't need them anymore.
     glDeleteShader(iVertexShaderId);
     glDeleteShader(iFragmentShaderId);
+}
+
+unsigned int Application::compileSkyboxShaderProgram() {
+    // Prepare shaders.
+    const auto iVertexShaderId = compileShader("res/shaders/skybox_vertex.glsl", true);
+    const auto iFragmentShaderId = compileShader("res/shaders/skybox_fragment.glsl", false);
+
+    // Create shader program.
+    const auto iShaderProgramId = glCreateProgram();
+
+    // Attach shaders to shader program.
+    glAttachShader(iShaderProgramId, iVertexShaderId);
+    glAttachShader(iShaderProgramId, iFragmentShaderId);
+
+    // Link shaders together.
+    glLinkProgram(iShaderProgramId);
+
+    // See if there were any linking errors.
+    int iSuccess = 0;
+    std::array<char, 1024> infoLog = {0}; // NOLINT
+    glGetProgramiv(iShaderProgramId, GL_LINK_STATUS, &iSuccess);
+    if (iSuccess == 0) {
+        glGetProgramInfoLog(iShaderProgramId, static_cast<int>(infoLog.size()), NULL, infoLog.data());
+        throw std::runtime_error(std::format("failed to link shader program, error: {}", infoLog.data()));
+    }
+
+    // Delete shaders since we don't need them anymore.
+    glDeleteShader(iVertexShaderId);
+    glDeleteShader(iFragmentShaderId);
+
+    return iShaderProgramId;
 }
 
 void Application::onFrameSubmitted() {
