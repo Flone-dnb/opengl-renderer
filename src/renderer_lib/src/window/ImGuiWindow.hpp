@@ -43,17 +43,11 @@ public:
                 const auto vPickedPaths = pfd::open_file(
                                               "Select GLTF/GLB file to display",
                                               std::filesystem::current_path().string(),
-                                              {"GLTF (*.gltf *.glb)"},
+                                              {"GLTF", "*.gltf *.glb"},
                                               pfd::opt::none)
                                               .result();
-                // Convert result.
-                std::vector<std::filesystem::path> vSelectedPaths(vPickedPaths.size());
-                for (size_t i = 0; i < vPickedPaths.size(); i++) {
-                    vSelectedPaths[i] = vPickedPaths[i];
-                }
-
-                if (!vSelectedPaths.empty()) {
-                    pApp->prepareScene(vSelectedPaths[0]);
+                if (!vPickedPaths.empty()) {
+                    pApp->prepareScene(vPickedPaths[0]);
                 }
             }
 
