@@ -27,8 +27,10 @@ layout(binding = 1) uniform sampler2D metallicRoughnessTexture;
 
 #define LIGHT_COUNT 2
 
+layout(binding = 2) uniform samplerCube environmentMap;
 uniform vec3 cameraPositionInWorldSpace;
 uniform vec3 ambientColor;
+uniform float environmentIntensity;
 uniform Material material;
 uniform LightSource vLightSources[LIGHT_COUNT];
 
@@ -79,11 +81,16 @@ void main()
     // Prepare specular color.
     vec3 fragmentSpecularColor = material.specularColor;
 #ifdef USE_METALLIC_ROUGHNESS_TEXTURE
-    fragmentSpecularColor *= vec3(1.0F - texture(metallicRoughnessTexture, fragmentUv).y);
+    fragmentSpecularColor *= vec3(1.0F - texture(metallicRoughnessTexture, fragmentUv).g);
 #endif
 
     // Calculate total light received.
     for (int i = 0; i < LIGHT_COUNT; i++){
         color.xyz += calculateColorFromLight(vLightSources[i], fragmentNormalUnit, fragmentDiffuseColor, fragmentSpecularColor);
     }
+
+    // Calculate environment reflection light.
+    vec3 cameraToFragmentDirectionUnit = normalize(fragmentPosition - cameraPositionInWorldSpace);
+    vec3 fragmentReflectionFromEyeDirectionUnit = reflect(cameraToFragmentDirectionUnit, fragmentNormalUnit);
+    color.xyz += texture(environmentMap, fragmentReflectionFromEyeDirectionUnit).rgb * environmentIntensity;
 } 

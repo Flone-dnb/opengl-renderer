@@ -83,6 +83,13 @@ public:
      */
     float* getSecondLightSourcePosition();
 
+    /**
+     * Returns intensity of environment map to be modified in ImGui slider.
+     *
+     * @return Pointer that points to environment parameter.
+     */
+    float* getEnvironmentIntensity();
+
 private:
     /**
      * GLFW callback that's called after the framebuffer size was changed.
@@ -223,6 +230,9 @@ private:
 
     /** Color of the ambient lighting. */
     glm::vec3 ambientColor = glm::vec3(0.05F, 0.05F, 0.05F); // NOLINT
+
+    /** Portion of environment color that objects should receive. */
+    float environmentIntensity = 0.1F; // NOLINT
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

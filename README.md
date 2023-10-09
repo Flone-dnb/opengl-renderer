@@ -3,6 +3,7 @@
 - [X] GLB/GLTF import.
 - [X] Frustum culling.
 - [X] Point lights.
+- [X] Environment mapping.
 
 # Setup (Build)
 

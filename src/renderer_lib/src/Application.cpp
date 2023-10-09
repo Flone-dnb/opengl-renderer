@@ -273,6 +273,8 @@ float* Application::getFirstLightSourcePosition() { return vLightSources[0].getL
 
 float* Application::getSecondLightSourcePosition() { return vLightSources[1].getLightPosition(); }
 
+float* Application::getEnvironmentIntensity() { return &environmentIntensity; }
+
 void Application::drawNextFrame() {
     // Refresh culled object counter.
     stats.iCulledObjectsLastFrame = 0;
@@ -289,8 +291,16 @@ void Application::drawNextFrame() {
         // Set shader program.
         glUseProgram(shader.iShaderProgramId);
 
+        // Bind cubemap.
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
+
         // Set ambient color.
         ShaderUniformHelpers::setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
+
+        // Set environment intensity.
+        ShaderUniformHelpers::setFloatToShader(
+            shader.iShaderProgramId, "environmentIntensity", environmentIntensity);
 
         // Set light properties.
         for (size_t i = 0; i < vLightSources.size(); i++) {
