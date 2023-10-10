@@ -219,6 +219,9 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
         if (pMesh->material.iMetallicRoughnessTextureId > 0) {
             macros.insert(ShaderProgramMacro::USE_METALLIC_ROUGHNESS_TEXTURE);
         }
+        if (pMesh->material.iEmissionTextureId > 0) {
+            macros.insert(ShaderProgramMacro::USE_EMISSION_TEXTURE);
+        }
     }
 
     // Prepare shader program for the specified macros.
@@ -292,7 +295,7 @@ void Application::drawNextFrame() {
         glUseProgram(shader.iShaderProgramId);
 
         // Bind cubemap.
-        glActiveTexture(GL_TEXTURE2);
+        glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
 
         // Set ambient color.

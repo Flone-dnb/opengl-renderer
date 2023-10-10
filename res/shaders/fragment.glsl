@@ -25,9 +25,14 @@ layout(binding = 0) uniform sampler2D diffuseTexture;
 layout(binding = 1) uniform sampler2D metallicRoughnessTexture;
 #endif
 
+#ifdef USE_EMISSION_TEXTURE
+layout(binding = 2) uniform sampler2D emissionTexture;
+#endif
+
+layout(binding = 3) uniform samplerCube environmentMap;
+
 #define LIGHT_COUNT 2
 
-layout(binding = 2) uniform samplerCube environmentMap;
 uniform vec3 cameraPositionInWorldSpace;
 uniform vec3 ambientColor;
 uniform float environmentIntensity;
@@ -41,7 +46,7 @@ float calculatePointLightAttenuation(float distanceToLight, float lightIntensity
     return lightIntensity / (1 + distanceToLightDivHalfRadius * distanceToLightDivHalfRadius);
 }
 
-vec3 calculateColorFromLight(LightSource lightSource, vec3 fragmentNormalUnit, vec3 fragmentDiffuseColor, vec3 fragmentSpecularColor){
+vec3 calculateColorFromPointLight(LightSource lightSource, vec3 fragmentNormalUnit, vec3 fragmentDiffuseColor, vec3 fragmentSpecularColor){
     // Calculate light attenuation.
     float fragmentDistanceToLight = length(lightSource.position - fragmentPosition);
     vec3 attenuatedLightColor =
@@ -61,7 +66,7 @@ vec3 calculateColorFromLight(LightSource lightSource, vec3 fragmentNormalUnit, v
             material.shininess);
     vec3 specularColor = attenuatedLightColor * (specularFactor * fragmentSpecularColor);
 
-    return ambientColor + diffuseLight + specularColor;
+    return diffuseLight + specularColor + ambientColor * (diffuseLight + specularColor);
 }
 
 void main()
@@ -78,6 +83,11 @@ void main()
     fragmentDiffuseColor *= vec3(texture(diffuseTexture, fragmentUv));
 #endif
 
+#ifdef USE_EMISSION_TEXTURE
+    // Use emission texture as a color texture for now...
+    fragmentDiffuseColor += vec3(texture(emissionTexture, fragmentUv));
+#endif
+
     // Prepare specular color.
     vec3 fragmentSpecularColor = material.specularColor;
 #ifdef USE_METALLIC_ROUGHNESS_TEXTURE
@@ -86,7 +96,7 @@ void main()
 
     // Calculate total light received.
     for (int i = 0; i < LIGHT_COUNT; i++){
-        color.xyz += calculateColorFromLight(vLightSources[i], fragmentNormalUnit, fragmentDiffuseColor, fragmentSpecularColor);
+        color.xyz += calculateColorFromPointLight(vLightSources[i], fragmentNormalUnit, fragmentDiffuseColor, fragmentSpecularColor);
     }
 
     // Calculate environment reflection light.

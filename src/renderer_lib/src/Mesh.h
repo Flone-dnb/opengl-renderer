@@ -27,6 +27,9 @@ struct Material {
     /** ID of the metallic (blue) + roughness (green) texture (if used). */
     unsigned int iMetallicRoughnessTextureId = 0;
 
+    /** ID of the emission texture (if used). */
+    unsigned int iEmissionTextureId = 0;
+
     /** Diffuse light color. */
     glm::vec3 diffuseColor = glm::vec3(1.0F, 1.0F, 1.0F);
 
@@ -85,6 +88,13 @@ struct Mesh {
      * @param pathToImageFile Path to the image file to use.
      */
     void setMetallicRoughnessTexture(const std::filesystem::path& pathToImageFile);
+
+    /**
+     * Assigns the specified emission texture.
+     *
+     * @param pathToImageFile Path to the image file to use.
+     */
+    void setEmissionTexture(const std::filesystem::path& pathToImageFile);
 
     /**
      * Sets new world matrix to be used.

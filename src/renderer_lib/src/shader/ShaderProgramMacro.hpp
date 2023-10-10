@@ -12,6 +12,7 @@
 enum class ShaderProgramMacro : unsigned int {
     USE_DIFFUSE_TEXTURE,
     USE_METALLIC_ROUGHNESS_TEXTURE,
+    USE_EMISSION_TEXTURE,
     // ... new macros go here, DON'T FORGET to add them to `macroToText` function ...
 };
 
@@ -22,6 +23,9 @@ inline std::string macroToText(ShaderProgramMacro macro) {
     }
     case (ShaderProgramMacro::USE_METALLIC_ROUGHNESS_TEXTURE): {
         return "USE_METALLIC_ROUGHNESS_TEXTURE";
+    }
+    case (ShaderProgramMacro::USE_EMISSION_TEXTURE): {
+        return "USE_EMISSION_TEXTURE";
     }
     }
 

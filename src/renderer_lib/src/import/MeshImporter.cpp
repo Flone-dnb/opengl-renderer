@@ -43,6 +43,7 @@ inline void processGltfMesh( // NOLINT: too complex
     const std::string sImageExtension = ".png";
     const std::string sDiffuseTextureName = "diffuse";
     const std::string sMetallicRoughnessTextureName = "metallic_roughness";
+    const std::string sEmissionTextureName = "emission";
 
     // Prepare paths.
     const std::filesystem::path pathToTempFiles = pathToFile.parent_path() / "temp";
@@ -298,6 +299,28 @@ inline void processGltfMesh( // NOLINT: too complex
 
                     // Load texture.
                     pNewMesh->setMetallicRoughnessTexture(pathToMetallicRoughnessImage);
+                }
+            }
+
+            // Process emission texture.
+            const auto iEmissionTextureIndex = material.emissiveTexture.index;
+            if (iEmissionTextureIndex >= 0) {
+                auto& emissionTexture = model.textures[iEmissionTextureIndex];
+                if (emissionTexture.source >= 0) {
+                    // Get image.
+                    auto& emissionImage = model.images[emissionTexture.source];
+
+                    // Prepare path to export the image to.
+                    const auto pathEmissionImage = pathToTempFiles / (sEmissionTextureName + sImageExtension);
+
+                    // Write image to disk.
+                    if (!writeGltfTextureToDisk(emissionImage, pathEmissionImage)) {
+                        throw std::runtime_error(std::format(
+                            "failed to write GLTF image to path \"{}\"", pathEmissionImage.string()));
+                    }
+
+                    // Load texture.
+                    pNewMesh->setEmissionTexture(pathEmissionImage);
                 }
             }
         }

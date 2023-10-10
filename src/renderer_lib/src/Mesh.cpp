@@ -61,9 +61,10 @@ Mesh::~Mesh() {
     // Delete textures.
     glDeleteTextures(1, &material.iDiffuseTextureId);
     glDeleteTextures(1, &material.iMetallicRoughnessTextureId);
+    glDeleteTextures(1, &material.iEmissionTextureId);
 
 #if defined(DEBUG)
-    static_assert(sizeof(Mesh) == 176, "add new resources to be deleted"); // NOLINT
+    static_assert(sizeof(Mesh) == 180, "add new resources to be deleted"); // NOLINT
 #endif
 }
 
@@ -97,6 +98,14 @@ void Mesh::setMetallicRoughnessTexture(const std::filesystem::path& pathToImageF
 
     // Create new texture.
     material.iMetallicRoughnessTextureId = TextureImporter::loadTexture(pathToImageFile);
+}
+
+void Mesh::setEmissionTexture(const std::filesystem::path& pathToImageFile) {
+    // Delete previous texture.
+    glDeleteTextures(1, &material.iEmissionTextureId);
+
+    // Create new texture.
+    material.iEmissionTextureId = TextureImporter::loadTexture(pathToImageFile);
 }
 
 void Mesh::setWorldMatrix(const glm::mat4x4& newWorldMatrix) {
@@ -196,9 +205,14 @@ void Material::setToShader(unsigned int iShaderProgramId) const {
     glBindTexture(GL_TEXTURE_2D, iDiffuseTextureId);
     setTexture2dParameters();
 
-    // Set diffuse texture at texture unit (location) 1.
+    // Set metallic+roughness texture at texture unit (location) 1.
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, iMetallicRoughnessTextureId);
+    setTexture2dParameters();
+
+    // Set emission texture at texture unit (location) 2.
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, iEmissionTextureId);
     setTexture2dParameters();
 
     // Set diffuse color.
