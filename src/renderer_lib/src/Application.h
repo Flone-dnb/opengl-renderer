@@ -232,7 +232,7 @@ private:
     glm::vec3 ambientColor = glm::vec3(0.05F, 0.05F, 0.05F); // NOLINT
 
     /** Portion of environment color that objects should receive. */
-    float environmentIntensity = 0.1F; // NOLINT
+    float environmentIntensity = 0.7F; // NOLINT
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

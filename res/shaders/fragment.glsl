@@ -91,7 +91,8 @@ void main()
     // Prepare specular color.
     vec3 fragmentSpecularColor = material.specularColor;
 #ifdef USE_METALLIC_ROUGHNESS_TEXTURE
-    fragmentSpecularColor *= vec3(1.0F - texture(metallicRoughnessTexture, fragmentUv).g);
+    vec3 fragmentMetallRoughness = texture(metallicRoughnessTexture, fragmentUv).rgb;
+    fragmentSpecularColor *= vec3(1.0F - fragmentMetallRoughness.g);
 #endif
 
     // Calculate total light received.
@@ -102,5 +103,11 @@ void main()
     // Calculate environment reflection light.
     vec3 cameraToFragmentDirectionUnit = normalize(fragmentPosition - cameraPositionInWorldSpace);
     vec3 fragmentReflectionFromEyeDirectionUnit = reflect(cameraToFragmentDirectionUnit, fragmentNormalUnit);
-    color.xyz += texture(environmentMap, fragmentReflectionFromEyeDirectionUnit).rgb * environmentIntensity;
+    vec3 environmentColor = texture(environmentMap, fragmentReflectionFromEyeDirectionUnit).rgb;
+
+#ifdef USE_METALLIC_ROUGHNESS_TEXTURE
+    color.xyz += environmentColor * fragmentMetallRoughness.b * environmentIntensity;
+#else
+    color.xyz += environmentColor * environmentIntensity;
+#endif
 } 
