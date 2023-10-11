@@ -239,7 +239,7 @@ private:
     float ambientLightIntensity = 0.1F; // NOLINT
 
     /** Portion of environment color that objects should receive. */
-    float environmentIntensity = 0.4F; // NOLINT
+    float environmentIntensity = 0.3F; // NOLINT
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

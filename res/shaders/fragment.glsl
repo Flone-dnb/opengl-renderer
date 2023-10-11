@@ -66,7 +66,7 @@ vec3 calculateColorFromPointLight(LightSource lightSource, vec3 fragmentNormalUn
             material.shininess);
     vec3 specularColor = attenuatedLightColor * (specularFactor * fragmentSpecularColor);
 
-    return diffuseLight + specularColor + ambientLightIntensity * (diffuseLight + specularColor);
+    return diffuseLight + specularColor + ambientLightIntensity * fragmentDiffuseColor;
 }
 
 void main()
