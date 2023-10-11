@@ -90,6 +90,13 @@ public:
      */
     float* getEnvironmentIntensity();
 
+    /**
+     * Returns intensity of ambient light to be modified in ImGui slider.
+     *
+     * @return Pointer that points to ambient light parameter.
+     */
+    float* getAmbientLightIntensity();
+
 private:
     /**
      * GLFW callback that's called after the framebuffer size was changed.
@@ -228,11 +235,11 @@ private:
     /** ID of the cubemap texture used for skybox. */
     unsigned int iSkyboxCubemapId = 0;
 
-    /** Color of the ambient lighting. */
-    glm::vec3 ambientColor = glm::vec3(0.05F, 0.05F, 0.05F); // NOLINT
+    /** Ambient lighting intensity. */
+    float ambientLightIntensity = 0.1F; // NOLINT
 
     /** Portion of environment color that objects should receive. */
-    float environmentIntensity = 0.7F; // NOLINT
+    float environmentIntensity = 0.4F; // NOLINT
 
     /** Various statistics for profiling. */
     ProfilingStatistics stats;

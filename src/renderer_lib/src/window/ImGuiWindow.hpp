@@ -66,6 +66,7 @@ public:
                 "light #1 position", pApp->getFirstLightSourcePosition(), -30.0F, 30.0F); // NOLINT
             ImGui::SliderFloat3(
                 "light #2 position", pApp->getSecondLightSourcePosition(), -30.0F, 30.0F); // NOLINT
+            ImGui::SliderFloat("ambient light intensity", pApp->getAmbientLightIntensity(), 0.0F, 1.0F);
             ImGui::SliderFloat(
                 "environment intensity", pApp->getEnvironmentIntensity(), 0.0F, 1.0F); // NOLINT
 

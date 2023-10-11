@@ -34,7 +34,7 @@ layout(binding = 3) uniform samplerCube environmentMap;
 #define LIGHT_COUNT 2
 
 uniform vec3 cameraPositionInWorldSpace;
-uniform vec3 ambientColor;
+uniform float ambientLightIntensity;
 uniform float environmentIntensity;
 uniform Material material;
 uniform LightSource vLightSources[LIGHT_COUNT];
@@ -66,7 +66,7 @@ vec3 calculateColorFromPointLight(LightSource lightSource, vec3 fragmentNormalUn
             material.shininess);
     vec3 specularColor = attenuatedLightColor * (specularFactor * fragmentSpecularColor);
 
-    return diffuseLight + specularColor + ambientColor * (diffuseLight + specularColor);
+    return diffuseLight + specularColor + ambientLightIntensity * (diffuseLight + specularColor);
 }
 
 void main()

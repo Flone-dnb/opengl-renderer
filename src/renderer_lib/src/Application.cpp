@@ -278,6 +278,8 @@ float* Application::getSecondLightSourcePosition() { return vLightSources[1].get
 
 float* Application::getEnvironmentIntensity() { return &environmentIntensity; }
 
+float* Application::getAmbientLightIntensity() { return &ambientLightIntensity; }
+
 void Application::drawNextFrame() {
     // Refresh culled object counter.
     stats.iCulledObjectsLastFrame = 0;
@@ -298,8 +300,9 @@ void Application::drawNextFrame() {
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
 
-        // Set ambient color.
-        ShaderUniformHelpers::setVector3ToShader(shader.iShaderProgramId, "ambientColor", ambientColor);
+        // Set ambient light.
+        ShaderUniformHelpers::setFloatToShader(
+            shader.iShaderProgramId, "ambientLightIntensity", ambientLightIntensity);
 
         // Set environment intensity.
         ShaderUniformHelpers::setFloatToShader(
