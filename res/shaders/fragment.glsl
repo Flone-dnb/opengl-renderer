@@ -59,10 +59,10 @@ vec3 calculateColorFromPointLight(LightSource lightSource, vec3 fragmentNormalUn
     vec3 diffuseLight = cosFragmentToLight * fragmentDiffuseColor * attenuatedLightColor;
 
     // Calculate specular color.
-    vec3 fragmentLightReflectionDirectionUnit = reflect(-fragmentToLightDirectionUnit, fragmentNormalUnit);
     vec3 fragmentToCameraDirectionUnit = normalize(cameraPositionInWorldSpace - fragmentPosition);
+    vec3 fragmentLightHalfwayDirectionUnit = normalize(fragmentToLightDirectionUnit + fragmentToCameraDirectionUnit);
     float specularFactor =
-        pow(max(dot(fragmentToCameraDirectionUnit, fragmentLightReflectionDirectionUnit), 0.0),
+        pow(max(dot(fragmentNormalUnit, fragmentLightHalfwayDirectionUnit), 0.0),
             material.shininess);
     vec3 specularColor = attenuatedLightColor * (specularFactor * fragmentSpecularColor);
 
