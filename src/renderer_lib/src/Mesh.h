@@ -24,6 +24,9 @@ struct Material {
     /** ID of the diffuse texture (if used). */
     unsigned int iDiffuseTextureId = 0;
 
+    /** ID of the normal texture (if used). */
+    unsigned int iNormalTextureId = 0;
+
     /** ID of the metallic (blue) + roughness (green) texture (if used). */
     unsigned int iMetallicRoughnessTextureId = 0;
 
@@ -45,14 +48,17 @@ struct Vertex {
     /** Describes to OpenGL how vertex data should be interpreted. */
     static void setVertexAttributes();
 
-    /** Vertex position in model space. */
+    /** Position in model space. */
     glm::vec3 position;
 
-    /** Vertex normal vector in model space. */
+    /** Normal vector in model space. */
     glm::vec3 normal;
 
     /** UV coordinate. */
     glm::vec2 uv;
+
+    /** Tangent vector in model space. */
+    glm::vec3 tangent;
 };
 
 /** Groups information to draw an object. */
@@ -80,6 +86,13 @@ struct Mesh {
      * @param pathToImageFile Path to the image file to use.
      */
     void setDiffuseTexture(const std::filesystem::path& pathToImageFile);
+
+    /**
+     * Assigns the specified normal texture to be used.
+     *
+     * @param pathToImageFile Path to the image file to use.
+     */
+    void setNormalTexture(const std::filesystem::path& pathToImageFile);
 
     /**
      * Assigns the specified texture where the roughness values are sampled from the Green channel and

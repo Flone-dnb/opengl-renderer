@@ -3,6 +3,7 @@
 in vec2 fragmentUv;
 in vec3 fragmentNormal;
 in vec3 fragmentPosition;
+in mat3 tangentBitangentNormalMatrix;
 
 struct Material {
     vec3 diffuseColor;
@@ -21,15 +22,19 @@ struct LightSource{
 layout(binding = 0) uniform sampler2D diffuseTexture;
 #endif
 
+#ifdef USE_NORMAL_TEXTURE
+layout(binding = 1) uniform sampler2D normalTexture;
+#endif
+
 #ifdef USE_METALLIC_ROUGHNESS_TEXTURE
-layout(binding = 1) uniform sampler2D metallicRoughnessTexture;
+layout(binding = 2) uniform sampler2D metallicRoughnessTexture;
 #endif
 
 #ifdef USE_EMISSION_TEXTURE
-layout(binding = 2) uniform sampler2D emissionTexture;
+layout(binding = 3) uniform sampler2D emissionTexture;
 #endif
 
-layout(binding = 3) uniform samplerCube environmentMap;
+layout(binding = 4) uniform samplerCube environmentMap;
 
 #define LIGHT_COUNT 2
 
@@ -71,8 +76,15 @@ vec3 calculateColorFromPointLight(LightSource lightSource, vec3 fragmentNormalUn
 
 void main()
 {
+    // Calculate normal.
+#ifdef USE_NORMAL_TEXTURE
+    vec3 fragmentNormalUnit = texture(normalTexture, fragmentUv).rgb; // read normal in range [0; 1]
+    fragmentNormalUnit = fragmentNormalUnit * 2.0F - 1.0F; // convert to range [-1; 1]
+    fragmentNormalUnit = normalize(tangentBitangentNormalMatrix * fragmentNormalUnit); // transform normal to world space
+#else
     // Normals may be unnormalized after the rasterization (when they are interpolated).
     vec3 fragmentNormalUnit = normalize(fragmentNormal);
+#endif
     
     // Define base (unlit) color.
     color = vec4(0.0F, 0.0F, 0.0F, 1.0F);

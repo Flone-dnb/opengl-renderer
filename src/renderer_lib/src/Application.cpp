@@ -327,6 +327,9 @@ void Application::prepareScene(const std::filesystem::path& pathToModel) {
         if (pMesh->material.iDiffuseTextureId > 0) {
             macros.insert(ShaderProgramMacro::USE_DIFFUSE_TEXTURE);
         }
+        if (pMesh->material.iNormalTextureId > 0) {
+            macros.insert(ShaderProgramMacro::USE_NORMAL_TEXTURE);
+        }
         if (pMesh->material.iMetallicRoughnessTextureId > 0) {
             macros.insert(ShaderProgramMacro::USE_METALLIC_ROUGHNESS_TEXTURE);
         }
@@ -413,7 +416,7 @@ void Application::drawNextFrame() {
         glUseProgram(shader.iShaderProgramId);
 
         // Bind cubemap.
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
 
         // Set ambient light.

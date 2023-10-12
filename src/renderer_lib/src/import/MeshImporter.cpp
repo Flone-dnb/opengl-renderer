@@ -8,6 +8,53 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tinygltf/tiny_gltf.h"
 
+inline void
+calculateTangentsAndBitangents(std::vector<Vertex>& vVertices, const std::vector<unsigned int>& vIndices) {
+    // Make sure indices describe triangles.
+    if (vIndices.size() % 3 != 0) [[unlikely]] {
+        throw std::runtime_error("expected the specified number of indices to be a multiple of 3");
+    }
+
+    // Calculate tangent and bitangent for each triangle.
+    for (size_t i = 0; i < vIndices.size(); i += 3) {
+        // Get all vertices of a triangle.
+        auto& vertex1 = vVertices[vIndices[i]];
+        auto& vertex2 = vVertices[vIndices[i + 1]];
+        auto& vertex3 = vVertices[vIndices[i + 2]];
+
+        // Calculate edges and UV differences.
+        const auto edge1 = vertex2.position - vertex1.position;
+        const auto edge2 = vertex3.position - vertex1.position;
+        const auto deltaUv1 = vertex2.uv - vertex1.uv;
+        const auto deltaUv2 = vertex3.uv - vertex1.uv;
+
+        // Because:
+        // edge1 = deltaUv1.x * tangent + deltaUv1.y * bitangent
+        // edge2 = deltaUv2.x * tangent + deltaUv2.y * bitangent
+        //
+        // we can rewrite this in matrix form as:
+        // [ edge1 ] = [ deltaUv1 ] * [ tangent   ]
+        // [ edge2 ] = [ deltaUv2 ] * [ bitangent ]
+        //
+        // so to calculate tangent and bitangent:
+        // [ tangent   ] = [ edge1 ] * [ deltaUv1 ]^(-1)
+        // [ bitangent ] = [ edge2 ] * [ deltaUv2 ]
+
+        // Calculate matrix.
+        glm::mat2x3 edgeMatrix = {edge1, edge2};
+        glm::mat2x2 deltaUvMatrix = {deltaUv1, deltaUv2};
+        glm::mat2x3 tangentBitangentMatrix = edgeMatrix * glm::inverse(deltaUvMatrix);
+
+        // Save normalized tangent (we don't save bitangent here instead we calculate it in shaders).
+        const auto tangent = glm::normalize(tangentBitangentMatrix[0]);
+
+        // Assign tangent.
+        vertex1.tangent = tangent;
+        vertex2.tangent = tangent;
+        vertex3.tangent = tangent;
+    }
+}
+
 inline bool writeGltfTextureToDisk(const tinygltf::Image& image, const std::filesystem::path& pathToImage) {
     // Prepare callbacks.
     tinygltf::FsCallbacks fsCallbacks = {
@@ -42,6 +89,7 @@ inline void processGltfMesh( // NOLINT: too complex
     // Prepare variables.
     const std::string sImageExtension = ".png";
     const std::string sDiffuseTextureName = "diffuse";
+    const std::string sNormalTextureName = "normal";
     const std::string sMetallicRoughnessTextureName = "metallic_roughness";
     const std::string sEmissionTextureName = "emission";
 
@@ -248,6 +296,8 @@ inline void processGltfMesh( // NOLINT: too complex
             }
         }
 
+        calculateTangentsAndBitangents(vVertices, vIndices);
+
         // Create a new mesh node with the specified data.
         auto pNewMesh = Mesh::create(std::move(vVertices), std::move(vIndices));
 
@@ -274,6 +324,28 @@ inline void processGltfMesh( // NOLINT: too complex
 
                     // Load texture.
                     pNewMesh->setDiffuseTexture(pathToDiffuseImage);
+                }
+            }
+
+            // Process normal texture.
+            const auto iNormalTextureIndex = material.normalTexture.index;
+            if (iNormalTextureIndex >= 0) {
+                auto& normalTexture = model.textures[iNormalTextureIndex];
+                if (normalTexture.source >= 0) {
+                    // Get image.
+                    auto& normalImage = model.images[normalTexture.source];
+
+                    // Prepare path to export the image to.
+                    const auto pathToNormalImage = pathToTempFiles / (sNormalTextureName + sImageExtension);
+
+                    // Write image to disk.
+                    if (!writeGltfTextureToDisk(normalImage, pathToNormalImage)) {
+                        throw std::runtime_error(std::format(
+                            "failed to write GLTF image to path \"{}\"", pathToNormalImage.string()));
+                    }
+
+                    // Load texture.
+                    pNewMesh->setNormalTexture(pathToNormalImage);
                 }
             }
 

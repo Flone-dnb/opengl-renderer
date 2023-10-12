@@ -13,6 +13,7 @@ void Vertex::setVertexAttributes() {
     const auto iPositionOffset = offsetof(Vertex, position);
     const auto iNormalOffset = offsetof(Vertex, normal);
     const auto iUvOffset = offsetof(Vertex, uv);
+    const auto iTangentOffset = offsetof(Vertex, tangent);
 
     // Specify position.
     glEnableVertexAttribArray(0);
@@ -43,6 +44,16 @@ void Vertex::setVertexAttributes() {
         GL_FALSE,                            // whether data should be normalized or not
         sizeof(Vertex),                      // stride (size in bytes between elements)
         reinterpret_cast<void*>(iUvOffset)); // NOLINT: beginning offset
+
+    // Specify tangent.
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(
+        3,                                        // attribute index (layout location)
+        3,                                        // number of components
+        GL_FLOAT,                                 // type of component
+        GL_FALSE,                                 // whether data should be normalized or not
+        sizeof(Vertex),                           // stride (size in bytes between elements)
+        reinterpret_cast<void*>(iTangentOffset)); // NOLINT: beginning offset
 }
 
 Mesh::~Mesh() {
@@ -62,9 +73,10 @@ Mesh::~Mesh() {
     glDeleteTextures(1, &material.iDiffuseTextureId);
     glDeleteTextures(1, &material.iMetallicRoughnessTextureId);
     glDeleteTextures(1, &material.iEmissionTextureId);
+    glDeleteTextures(1, &material.iNormalTextureId);
 
 #if defined(DEBUG)
-    static_assert(sizeof(Mesh) == 180, "add new resources to be deleted"); // NOLINT
+    static_assert(sizeof(Mesh) == 184, "add new resources to be deleted"); // NOLINT
 #endif
 }
 
@@ -90,6 +102,14 @@ void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
 
     // Create new texture.
     material.iDiffuseTextureId = TextureImporter::loadTexture(pathToImageFile, true);
+}
+
+void Mesh::setNormalTexture(const std::filesystem::path& pathToImageFile) {
+    // Delete previous texture.
+    glDeleteTextures(1, &material.iNormalTextureId);
+
+    // Create new texture.
+    material.iNormalTextureId = TextureImporter::loadTexture(pathToImageFile, false);
 }
 
 void Mesh::setMetallicRoughnessTexture(const std::filesystem::path& pathToImageFile) {
@@ -205,13 +225,18 @@ void Material::setToShader(unsigned int iShaderProgramId) const {
     glBindTexture(GL_TEXTURE_2D, iDiffuseTextureId);
     setTexture2dParameters();
 
-    // Set metallic+roughness texture at texture unit (location) 1.
+    // Set normal texture at texture unit (location) 1.
     glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, iNormalTextureId);
+    setTexture2dParameters();
+
+    // Set metallic+roughness texture at texture unit (location) 2.
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, iMetallicRoughnessTextureId);
     setTexture2dParameters();
 
-    // Set emission texture at texture unit (location) 2.
-    glActiveTexture(GL_TEXTURE2);
+    // Set emission texture at texture unit (location) 3.
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, iEmissionTextureId);
     setTexture2dParameters();
 
