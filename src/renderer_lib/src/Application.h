@@ -311,6 +311,9 @@ private:
     /** `true` if mouse cursor is hidden, `false `otherwise. */
     bool bIsMouseCursorCaptured = false;
 
+    /** `true` if framebuffer sizes are equal to 0, `false` otherwise. */
+    bool bIsWindowMinimized = false;
+
     /** Sample count for multi-sample anti-aliasing. */
     static constexpr int iMsaaSampleCount = 8;
 };

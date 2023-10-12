@@ -285,6 +285,10 @@ void Application::mainLoop() {
         // Process window events.
         glfwPollEvents();
 
+        if (bIsWindowMinimized) {
+            continue;
+        }
+
         // Start drawing the Dear ImGui frame.
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -714,6 +718,12 @@ void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWi
     if (pApplication == nullptr) [[unlikely]] {
         return;
     }
+
+    if (iWidth == 0 && iHeight == 0) {
+        pApplication->bIsWindowMinimized = true;
+        return; // don't change viewport/framebuffers because they can't have 0 size
+    }
+    pApplication->bIsWindowMinimized = false;
 
     // Update viewport size according to the new framebuffer size.
     glViewport(0, 0, iWidth, iHeight);
