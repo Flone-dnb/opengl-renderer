@@ -81,10 +81,18 @@ void Application::run() {
     setupImGui();
     initOpenGl();
 
+    createFramebuffers();
+
     // Prepare environment map.
     iSkyboxCubemapId = TextureImporter::loadCubemap("res/skybox");
     iSkyboxShaderProgramId = compileSkyboxShaderProgram();
     pSkyboxMesh = std::move(MeshImporter::importMesh("res/skybox/skybox.glb")[0]);
+
+    // Prepare post-processing shader program.
+    iPostProcessingShaderProgramId = compilePostProcessShaderProgram();
+
+    // Prepare screen quad.
+    createScreenQuad();
 
     mainLoop();
 
@@ -143,6 +151,105 @@ void Application::initWindow() {
 
     // Bind to keyboard input.
     glfwSetKeyCallback(pGLFWWindow, Application::glfwWindowKeyboardCallback);
+}
+
+void Application::createFramebuffers() {
+    // Remove previous objects (if existed).
+    glDeleteFramebuffers(1, &iRenderFramebufferId);
+    glDeleteFramebuffers(1, &iPostProcessFramebufferId);
+    glDeleteTextures(1, &iRenderFramebufferColorTextureId);
+    glDeleteTextures(1, &iPostProcessFramebufferColorTextreId);
+    glDeleteRenderbuffers(1, &iRenderFramebufferDepthStencilBufferId);
+
+    // Create a framebuffer, a color texture and a depth/stencil buffer.
+    glGenFramebuffers(1, &iRenderFramebufferId);
+    glGenTextures(1, &iRenderFramebufferColorTextureId);
+    glGenRenderbuffers(1, &iRenderFramebufferDepthStencilBufferId);
+
+    // Bind them to the target to update them.
+    glBindFramebuffer(GL_FRAMEBUFFER, iRenderFramebufferId);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, iRenderFramebufferColorTextureId);
+    glBindRenderbuffer(GL_RENDERBUFFER, iRenderFramebufferDepthStencilBufferId);
+
+    // Get window size.
+    int iWidth = -1;
+    int iHeight = -1;
+    glfwGetWindowSize(pGLFWWindow, &iWidth, &iHeight);
+
+    // Configure texture size/properties.
+    glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, iMsaaSampleCount, GL_RGB8, iWidth, iHeight, GL_TRUE);
+
+    // Attach color texture to framebuffer.
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, iRenderFramebufferColorTextureId, 0);
+
+    // Configure depth/stencil buffer size/properties.
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, iMsaaSampleCount, GL_DEPTH24_STENCIL8, iWidth, iHeight);
+
+    // Attach depth/stencil buffer to framebuffer.
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, iRenderFramebufferDepthStencilBufferId);
+
+    // Make sure framebuffer is complete.
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Render framebuffer is not complete!");
+    }
+
+    // Unbind textures/buffers as we no longer need to update them.
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Create framebuffer for post processing.
+    glGenFramebuffers(1, &iPostProcessFramebufferId);
+
+    // Create color texture for post processing framebuffer.
+    glGenTextures(1, &iPostProcessFramebufferColorTextreId);
+
+    // Bind framebuffer and texture to update them.
+    glBindTexture(GL_TEXTURE_2D, iPostProcessFramebufferColorTextreId);
+    glBindFramebuffer(GL_FRAMEBUFFER, iPostProcessFramebufferId);
+
+    // Setup color texture.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iWidth, iHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Attach color texture to framebuffer.
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, iPostProcessFramebufferColorTextreId, 0);
+
+    // Make sure framebuffer is complete.
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Post processing framebuffer is not complete!");
+    }
+
+    // Unbind textures/buffers as we no longer need to update them.
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Application::createScreenQuad() {
+    std::vector<Vertex> vVertices;
+    Vertex vertex;
+
+    // Specify positions in the normalized device coordinates.
+
+    vertex.position = glm::vec3(-1.0F, 1.0F, 0.0F);
+    vertex.uv = glm::vec2(0.0F, 1.0F);
+    vVertices.push_back(vertex);
+
+    vertex.position = glm::vec3(-1.0F, -1.0F, 0.0F);
+    vertex.uv = glm::vec2(0.0F, 0.0F);
+    vVertices.push_back(vertex);
+
+    vertex.position = glm::vec3(1.0F, -1.0F, 0.0F);
+    vertex.uv = glm::vec2(1.0F, 0.0F);
+    vVertices.push_back(vertex);
+
+    vertex.position = glm::vec3(1.0F, 1.0F, 0.0F);
+    vertex.uv = glm::vec2(1.0F, 1.0F);
+    vVertices.push_back(vertex);
+
+    pScreenQuadMesh = Mesh::create(std::move(vVertices), {0, 1, 2, 0, 2, 3});
 }
 
 void Application::initOpenGl() {
@@ -284,6 +391,9 @@ void Application::drawNextFrame() {
     // Refresh culled object counter.
     stats.iCulledObjectsLastFrame = 0;
 
+    // Set framebuffer to render the scene to.
+    glBindFramebuffer(GL_FRAMEBUFFER, iRenderFramebufferId);
+
     // Clear color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -352,37 +462,33 @@ void Application::drawNextFrame() {
         }
     }
 
-    // Set shader program.
-    glUseProgram(iSkyboxShaderProgramId);
+    // Draw the skybox.
+    drawSkybox();
 
-    // Bind cubemap.
-    glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
+    // Switch to post processing framebuffer.
+    glBindFramebuffer(GL_FRAMEBUFFER, iPostProcessFramebufferId);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    // Set view/projection matrix.
-    ShaderUniformHelpers::setMatrix4ToShader(
-        iSkyboxShaderProgramId,
-        "viewProjectionMatrix",
-        projectionMatrix * glm::mat4(glm::mat3(
-                               viewMatrix))); // remove translation to make skybox centered on camera location
+    // Get created window size.
+    int iWidth = -1;
+    int iHeight = -1;
+    glfwGetWindowSize(pGLFWWindow, &iWidth, &iHeight);
 
-    // Set vertex array object.
-    glBindVertexArray(pSkyboxMesh->iVertexArrayObjectId);
+    // Resolve multisampled color texture to post processing framebuffer.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, iRenderFramebufferId);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, iPostProcessFramebufferId);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glBlitFramebuffer(0, 0, iWidth, iHeight, 0, 0, iWidth, iHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    // Set element object.
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pSkyboxMesh->iIndexBufferObjectId);
+    // Switch to default framebuffer.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Disable backface culling to render cubemap (because the camera will be inside of that cube).
-    glCullFace(GL_FRONT);
-    glDepthFunc(GL_LEQUAL); // change depth comparison to <=1.0F to render skybox because it has 1.0 depth
-                            // (see shaders)
+    // Draw a quad with the size of the screen.
+    drawPostProcessingScreenQuad();
 
-    // Submit a draw command.
-    glDrawElements(GL_TRIANGLES, pSkyboxMesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
-
-    // Return backface culling and depth comparison function.
-    glCullFace(GL_BACK);
-    glDepthFunc(GL_LESS); // restore depth comparison function
-
+    // Finished submitting a new frame.
     onFrameSubmitted();
 }
 
@@ -454,10 +560,102 @@ void Application::prepareShaderProgram(const std::unordered_set<ShaderProgramMac
     glDeleteShader(iFragmentShaderId);
 }
 
+void Application::drawSkybox() {
+    // Get view and projection matrices.
+    const auto viewMatrix = pCamera->getCameraProperties()->getViewMatrix();
+    const auto projectionMatrix = pCamera->getCameraProperties()->getProjectionMatrix();
+
+    // Set shader program.
+    glUseProgram(iSkyboxShaderProgramId);
+
+    // Bind cubemap.
+    glBindTexture(GL_TEXTURE_CUBE_MAP, iSkyboxCubemapId);
+
+    // Set view/projection matrix.
+    ShaderUniformHelpers::setMatrix4ToShader(
+        iSkyboxShaderProgramId,
+        "viewProjectionMatrix",
+        projectionMatrix * glm::mat4(glm::mat3(
+                               viewMatrix))); // remove translation to make skybox centered on camera location
+
+    // Set vertex/index buffers.
+    glBindVertexArray(pSkyboxMesh->iVertexArrayObjectId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pSkyboxMesh->iIndexBufferObjectId);
+
+    // Disable backface culling to render cubemap (because the camera will be inside of that cube).
+    glCullFace(GL_FRONT);
+    glDepthFunc(GL_LEQUAL); // change depth comparison to <=1.0F to render skybox because it has 1.0 depth
+                            // (see shaders)
+
+    {
+        // Submit a draw command.
+        glDrawElements(GL_TRIANGLES, pSkyboxMesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
+    }
+
+    // Return backface culling and depth comparison function.
+    glCullFace(GL_BACK);
+    glDepthFunc(GL_LESS); // restore depth comparison function
+}
+
+void Application::drawPostProcessingScreenQuad() {
+    // Set shader program.
+    glUseProgram(iPostProcessingShaderProgramId);
+
+    // Disable depth test because we need this quad to be rendered.
+    glDisable(GL_DEPTH_TEST);
+
+    {
+        // Bind texture on which our scene was rendered.
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, iPostProcessFramebufferColorTextreId);
+
+        // Set vertex/index buffers.
+        glBindVertexArray(pScreenQuadMesh->iVertexArrayObjectId);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pScreenQuadMesh->iIndexBufferObjectId);
+
+        // Submit a draw command.
+        glDrawElements(GL_TRIANGLES, pScreenQuadMesh->iIndexCount, GL_UNSIGNED_INT, nullptr);
+    }
+
+    // Restore depth test.
+    glEnable(GL_DEPTH_TEST);
+}
+
 unsigned int Application::compileSkyboxShaderProgram() {
     // Prepare shaders.
     const auto iVertexShaderId = compileShader("res/shaders/skybox_vertex.glsl", true);
     const auto iFragmentShaderId = compileShader("res/shaders/skybox_fragment.glsl", false);
+
+    // Create shader program.
+    const auto iShaderProgramId = glCreateProgram();
+
+    // Attach shaders to shader program.
+    glAttachShader(iShaderProgramId, iVertexShaderId);
+    glAttachShader(iShaderProgramId, iFragmentShaderId);
+
+    // Link shaders together.
+    glLinkProgram(iShaderProgramId);
+
+    // See if there were any linking errors.
+    int iSuccess = 0;
+    std::array<char, 1024> infoLog = {0}; // NOLINT
+    glGetProgramiv(iShaderProgramId, GL_LINK_STATUS, &iSuccess);
+    if (iSuccess == 0) {
+        glGetProgramInfoLog(iShaderProgramId, static_cast<int>(infoLog.size()), NULL, infoLog.data());
+        throw std::runtime_error(std::format("failed to link shader program, error: {}", infoLog.data()));
+    }
+
+    // Delete shaders since we don't need them anymore.
+    glDeleteShader(iVertexShaderId);
+    glDeleteShader(iFragmentShaderId);
+
+    return iShaderProgramId;
+}
+
+unsigned int Application::compilePostProcessShaderProgram() {
+    // Prepare shaders.
+    const auto iVertexShaderId = compileShader("res/shaders/post_process_vertex.glsl", true);
+    const auto iFragmentShaderId = compileShader("res/shaders/post_process_fragment.glsl", false);
 
     // Create shader program.
     const auto iShaderProgramId = glCreateProgram();
@@ -517,6 +715,9 @@ void Application::glfwFramebufferResizeCallback(GLFWwindow* pGlfwWindow, int iWi
 
     // Update camera's aspect ratio.
     pApplication->pCamera->getCameraProperties()->setAspectRatio(iWidth, iHeight);
+
+    // Re-create framebuffer.
+    pApplication->createFramebuffers();
 }
 
 void Application::glfwWindowKeyboardCallback(

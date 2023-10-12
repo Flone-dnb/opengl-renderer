@@ -162,6 +162,13 @@ private:
     static unsigned int compileSkyboxShaderProgram();
 
     /**
+     * Compiles shader used to do post-processing.
+     *
+     * @return ID of the compiled shader program.
+     */
+    static unsigned int compilePostProcessShaderProgram();
+
+    /**
      * Sets rotation of all displayed (imported) meshes.
      *
      * @param rotation Rotation.
@@ -185,6 +192,12 @@ private:
     /** Initializes GLFW. */
     void initWindow();
 
+    /** Prepares and initializes framebuffers. */
+    void createFramebuffers();
+
+    /** Creates @ref pScreenQuadMesh. */
+    void createScreenQuad();
+
     /** Processes window messages and does the rendering. */
     void mainLoop();
 
@@ -198,6 +211,12 @@ private:
      * @param macros Macros that should be defined for a shader program.
      */
     void prepareShaderProgram(const std::unordered_set<ShaderProgramMacro>& macros);
+
+    /** Draws a skybox. */
+    void drawSkybox();
+
+    /** Draws a quad that has the size of the screen and does post-processing. */
+    void drawPostProcessingScreenQuad();
 
     /** Updates @ref stats. */
     void onFrameSubmitted();
@@ -229,7 +248,36 @@ private:
     /** Mesh that holds skybox cubemap. */
     std::unique_ptr<Mesh> pSkyboxMesh;
 
-    /** ID of the shader used to render skybox. */
+    /** Quad that has its positions specified in NDC. */
+    std::unique_ptr<Mesh> pScreenQuadMesh;
+
+    /** Various statistics for profiling. */
+    ProfilingStatistics stats;
+
+    /** GLFW window. */
+    GLFWwindow* pGLFWWindow = nullptr;
+
+    /** ID of the framebuffer used to render the scene to. */
+    unsigned int iRenderFramebufferId = 0;
+
+    /** ID of the color texture used as a color attachment in @ref iRenderFramebufferId. */
+    unsigned int iRenderFramebufferColorTextureId = 0;
+
+    /** ID of the depth/stencil buffer in @ref iRenderFramebufferId. */
+    unsigned int iRenderFramebufferDepthStencilBufferId = 0;
+
+    /** ID of the framebuffer used to do post processing. */
+    unsigned int iPostProcessFramebufferId = 0;
+
+    /**
+     * ID of the color texture that stores resolved (non-multisampled) color from @ref iRenderFramebufferId.
+     */
+    unsigned int iPostProcessFramebufferColorTextreId = 0;
+
+    /** ID of the shader program used to do post-processing. */
+    unsigned int iPostProcessingShaderProgramId = 0;
+
+    /** ID of the shader program used to render skybox. */
     unsigned int iSkyboxShaderProgramId = 0;
 
     /** ID of the cubemap texture used for skybox. */
@@ -240,12 +288,6 @@ private:
 
     /** Portion of environment color that objects should receive. */
     float environmentIntensity = 0.3F; // NOLINT
-
-    /** Various statistics for profiling. */
-    ProfilingStatistics stats;
-
-    /** GLFW window. */
-    GLFWwindow* pGLFWWindow = nullptr;
 
     /** Used to calculate mouse movement offset. */
     double lastMousePosX = 0.0;
@@ -258,4 +300,7 @@ private:
 
     /** `true` if mouse cursor is hidden, `false `otherwise. */
     bool bIsMouseCursorCaptured = false;
+
+    /** Sample count for multi-sample anti-aliasing. */
+    static constexpr int iMsaaSampleCount = 8;
 };

@@ -1,0 +1,12 @@
+#version 460 core
+
+in vec2 fragmentUv;
+
+layout(binding = 0) uniform sampler2D screenTexture;
+
+out vec4 color;
+
+void main()
+{
+    color = texture(screenTexture, fragmentUv);
+}
