@@ -97,6 +97,13 @@ public:
      */
     float* getAmbientLightIntensity();
 
+    /**
+     * Returns gamma to be modified in ImGui slider.
+     *
+     * @return Pointer that points to gamma parameter.
+     */
+    float* getGamma();
+
 private:
     /**
      * GLFW callback that's called after the framebuffer size was changed.
@@ -283,11 +290,14 @@ private:
     /** ID of the cubemap texture used for skybox. */
     unsigned int iSkyboxCubemapId = 0;
 
+    /** Gamma correction value. */
+    float gamma = 2.2F; // NOLINT: standard gamma correction value
+
     /** Ambient lighting intensity. */
     float ambientLightIntensity = 0.1F; // NOLINT
 
     /** Portion of environment color that objects should receive. */
-    float environmentIntensity = 0.3F; // NOLINT
+    float environmentIntensity = 0.4F; // NOLINT
 
     /** Used to calculate mouse movement offset. */
     double lastMousePosX = 0.0;

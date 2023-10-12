@@ -13,7 +13,7 @@
 
 bool TextureImporter::bFlipTexturesVertically = false;
 
-unsigned int TextureImporter::loadTexture(const std::filesystem::path& pathToImage) {
+unsigned int TextureImporter::loadTexture(const std::filesystem::path& pathToImage, bool bIsDiffuseTexture) {
     // Make sure the specified path exists.
     if (!std::filesystem::exists(pathToImage)) [[unlikely]] {
         throw std::runtime_error(
@@ -44,7 +44,18 @@ unsigned int TextureImporter::loadTexture(const std::filesystem::path& pathToIma
     glBindTexture(GL_TEXTURE_2D, iTextureId);
 
     // Copy pixels to the texture.
-    glTexImage2D(GL_TEXTURE_2D, 0, iGlFormat, iWidth, iHeight, 0, iGlFormat, GL_UNSIGNED_BYTE, pPixels);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        bIsDiffuseTexture
+            ? GL_SRGB    // Specifying `SRGB` so that OpenGL will correct the colors
+            : iGlFormat, // to linear-space as soon as we use them to avoid applying gamma correction twice.
+        iWidth,
+        iHeight,
+        0,
+        iGlFormat,
+        GL_UNSIGNED_BYTE,
+        pPixels);
 
     // Generate mipmaps.
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -107,7 +118,7 @@ unsigned int TextureImporter::loadCubemap(const std::filesystem::path& pathToIma
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<int>(i),
             0,
-            iGlFormat,
+            GL_SRGB,
             iWidth,
             iHeight,
             0,

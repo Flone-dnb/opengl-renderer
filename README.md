@@ -4,6 +4,7 @@
 - [X] Frustum culling.
 - [X] Point lights.
 - [X] Environment mapping.
+- [X] Gamma correction.
 
 # Setup (Build)
 

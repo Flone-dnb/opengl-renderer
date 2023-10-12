@@ -89,7 +89,7 @@ void Mesh::setDiffuseTexture(const std::filesystem::path& pathToImageFile) {
     glDeleteTextures(1, &material.iDiffuseTextureId);
 
     // Create new texture.
-    material.iDiffuseTextureId = TextureImporter::loadTexture(pathToImageFile);
+    material.iDiffuseTextureId = TextureImporter::loadTexture(pathToImageFile, true);
 }
 
 void Mesh::setMetallicRoughnessTexture(const std::filesystem::path& pathToImageFile) {
@@ -97,7 +97,7 @@ void Mesh::setMetallicRoughnessTexture(const std::filesystem::path& pathToImageF
     glDeleteTextures(1, &material.iMetallicRoughnessTextureId);
 
     // Create new texture.
-    material.iMetallicRoughnessTextureId = TextureImporter::loadTexture(pathToImageFile);
+    material.iMetallicRoughnessTextureId = TextureImporter::loadTexture(pathToImageFile, false);
 }
 
 void Mesh::setEmissionTexture(const std::filesystem::path& pathToImageFile) {
@@ -105,7 +105,7 @@ void Mesh::setEmissionTexture(const std::filesystem::path& pathToImageFile) {
     glDeleteTextures(1, &material.iEmissionTextureId);
 
     // Create new texture.
-    material.iEmissionTextureId = TextureImporter::loadTexture(pathToImageFile);
+    material.iEmissionTextureId = TextureImporter::loadTexture(pathToImageFile, false);
 }
 
 void Mesh::setWorldMatrix(const glm::mat4x4& newWorldMatrix) {

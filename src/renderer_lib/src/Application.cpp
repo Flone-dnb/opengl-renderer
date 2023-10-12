@@ -387,6 +387,8 @@ float* Application::getEnvironmentIntensity() { return &environmentIntensity; }
 
 float* Application::getAmbientLightIntensity() { return &ambientLightIntensity; }
 
+float* Application::getGamma() { return &gamma; }
+
 void Application::drawNextFrame() {
     // Refresh culled object counter.
     stats.iCulledObjectsLastFrame = 0;
@@ -608,6 +610,9 @@ void Application::drawPostProcessingScreenQuad() {
         // Bind texture on which our scene was rendered.
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, iPostProcessFramebufferColorTextreId);
+
+        // Set gamma to shaders.
+        ShaderUniformHelpers::setFloatToShader(iPostProcessingShaderProgramId, "gamma", gamma);
 
         // Set vertex/index buffers.
         glBindVertexArray(pScreenQuadMesh->iVertexArrayObjectId);

@@ -70,6 +70,10 @@ public:
             ImGui::SliderFloat(
                 "environment intensity", pApp->getEnvironmentIntensity(), 0.0F, 1.0F); // NOLINT
 
+            ImGui::SeparatorText("Post processing");
+
+            ImGui::SliderFloat("gamma", pApp->getGamma(), 1.0F, 3.0F); // NOLINT
+
             ImGui::SeparatorText("Statistics");
 
             ImGui::Text("FPS: %zu", pApp->getProfilingStats()->iFramesPerSecond);
