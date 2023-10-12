@@ -75,7 +75,7 @@ void GLAPIENTRY opengGlMessageCallback(
 void Application::run() {
     // Create camera.
     pCamera = std::make_unique<Camera>();
-    pCamera->setCameraMovementSpeed(10.0F); // NOLINT
+    pCamera->setCameraMovementSpeed(5.0F); // NOLINT
 
     initWindow();
     setupImGui();
