@@ -6,6 +6,7 @@
 - [X] Environment mapping.
 - [X] Normal mapping.
 - [X] Gamma correction.
+- [X] HDR (tone mapping).
 
 # Setup (Build)
 

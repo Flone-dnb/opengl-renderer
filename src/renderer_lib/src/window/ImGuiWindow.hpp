@@ -72,7 +72,8 @@ public:
 
             ImGui::SeparatorText("Post processing");
 
-            ImGui::SliderFloat("gamma", pApp->getGamma(), 1.0F, 3.0F); // NOLINT
+            ImGui::SliderFloat("gamma", pApp->getGamma(), 1.0F, 3.0F);       // NOLINT
+            ImGui::SliderFloat("exposure", pApp->getExposure(), 0.1F, 5.0F); // NOLINT
 
             ImGui::SeparatorText("Statistics");
 

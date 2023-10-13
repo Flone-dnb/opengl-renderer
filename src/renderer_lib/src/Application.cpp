@@ -177,7 +177,8 @@ void Application::createFramebuffers() {
     glfwGetWindowSize(pGLFWWindow, &iWidth, &iHeight);
 
     // Configure texture size/properties.
-    glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, iMsaaSampleCount, GL_RGB8, iWidth, iHeight, GL_TRUE);
+    glTexStorage2DMultisample(
+        GL_TEXTURE_2D_MULTISAMPLE, iMsaaSampleCount, GL_RGB16F, iWidth, iHeight, GL_TRUE);
 
     // Attach color texture to framebuffer.
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, iRenderFramebufferColorTextureId, 0);
@@ -395,6 +396,8 @@ float* Application::getEnvironmentIntensity() { return &environmentIntensity; }
 float* Application::getAmbientLightIntensity() { return &ambientLightIntensity; }
 
 float* Application::getGamma() { return &gamma; }
+
+float* Application::getExposure() { return &exposure; }
 
 void Application::drawNextFrame() {
     // Refresh culled object counter.
@@ -620,6 +623,9 @@ void Application::drawPostProcessingScreenQuad() {
 
         // Set gamma to shaders.
         ShaderUniformHelpers::setFloatToShader(iPostProcessingShaderProgramId, "gamma", gamma);
+
+        // Set exposure to shaders.
+        ShaderUniformHelpers::setFloatToShader(iPostProcessingShaderProgramId, "exposure", exposure);
 
         // Set vertex/index buffers.
         glBindVertexArray(pScreenQuadMesh->iVertexArrayObjectId);

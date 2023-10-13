@@ -104,6 +104,13 @@ public:
      */
     float* getGamma();
 
+    /**
+     * Returns exposure to be modified in ImGui slider.
+     *
+     * @return Pointer that points to exposure parameter.
+     */
+    float* getExposure();
+
 private:
     /**
      * GLFW callback that's called after the framebuffer size was changed.
@@ -291,7 +298,10 @@ private:
     unsigned int iSkyboxCubemapId = 0;
 
     /** Gamma correction value. */
-    float gamma = 2.2F; // NOLINT: standard gamma correction value
+    float gamma = 2.0F; // NOLINT
+
+    /** Exposure for tone mapping. */
+    float exposure = 2.0F; // NOLINT
 
     /** Ambient lighting intensity. */
     float ambientLightIntensity = 0.1F; // NOLINT
