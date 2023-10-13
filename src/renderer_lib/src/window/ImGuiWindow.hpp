@@ -74,6 +74,8 @@ public:
 
             ImGui::SliderFloat("gamma", pApp->getGamma(), 1.0F, 3.0F);       // NOLINT
             ImGui::SliderFloat("exposure", pApp->getExposure(), 0.1F, 5.0F); // NOLINT
+            ImGui::SameLine();
+            ImGui::Checkbox("apply tone mapping", pApp->getTonemappingEnabled());
 
             ImGui::SeparatorText("Statistics");
 

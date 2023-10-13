@@ -399,6 +399,8 @@ float* Application::getGamma() { return &gamma; }
 
 float* Application::getExposure() { return &exposure; }
 
+bool* Application::getTonemappingEnabled() { return &bApplyTonemapping; }
+
 void Application::drawNextFrame() {
     // Refresh culled object counter.
     stats.iCulledObjectsLastFrame = 0;
@@ -626,6 +628,10 @@ void Application::drawPostProcessingScreenQuad() {
 
         // Set exposure to shaders.
         ShaderUniformHelpers::setFloatToShader(iPostProcessingShaderProgramId, "exposure", exposure);
+
+        // Set tone mapping enabler to shaders.
+        ShaderUniformHelpers::setFloatToShader(
+            iPostProcessingShaderProgramId, "bEnableTonemapping", static_cast<float>(bApplyTonemapping));
 
         // Set vertex/index buffers.
         glBindVertexArray(pScreenQuadMesh->iVertexArrayObjectId);

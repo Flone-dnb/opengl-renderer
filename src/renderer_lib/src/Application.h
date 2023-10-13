@@ -111,6 +111,13 @@ public:
      */
     float* getExposure();
 
+    /**
+     * Returns tonemapping toggle to be modified in ImGui slider.
+     *
+     * @return Pointer that points to parameter.
+     */
+    bool* getTonemappingEnabled();
+
 private:
     /**
      * GLFW callback that's called after the framebuffer size was changed.
@@ -298,16 +305,16 @@ private:
     unsigned int iSkyboxCubemapId = 0;
 
     /** Gamma correction value. */
-    float gamma = 2.0F; // NOLINT
+    float gamma = 1.6F; // NOLINT
 
     /** Exposure for tone mapping. */
-    float exposure = 2.0F; // NOLINT
+    float exposure = 3.0F; // NOLINT
 
     /** Ambient lighting intensity. */
     float ambientLightIntensity = 0.1F; // NOLINT
 
     /** Portion of environment color that objects should receive. */
-    float environmentIntensity = 0.4F; // NOLINT
+    float environmentIntensity = 0.5F; // NOLINT
 
     /** Used to calculate mouse movement offset. */
     double lastMousePosX = 0.0;
@@ -317,6 +324,9 @@ private:
 
     /** Camera rotation multiplier. */
     const double cameraRotationSensitivity = 0.1;
+
+    /** `true` to apply tone mapping during post-processing, `false` otherwise. */
+    bool bApplyTonemapping = true;
 
     /** `true` if mouse cursor is hidden, `false `otherwise. */
     bool bIsMouseCursorCaptured = false;
