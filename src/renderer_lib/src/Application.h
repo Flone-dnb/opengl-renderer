@@ -305,7 +305,7 @@ private:
     unsigned int iSkyboxCubemapId = 0;
 
     /** Gamma correction value. */
-    float gamma = 1.6F; // NOLINT
+    float gamma = 1.4F; // NOLINT
 
     /** Exposure for tone mapping. */
     float exposure = 3.0F; // NOLINT
