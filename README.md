@@ -1,7 +1,10 @@
+![](screenshot.png?raw=true)
+
 # Features
 
 - [X] GLB/GLTF import.
 - [X] Frustum culling.
+- [X] Diffuse, roughness textures.
 - [X] Point lights.
 - [X] Environment mapping.
 - [X] Normal mapping.
