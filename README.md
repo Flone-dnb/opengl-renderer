@@ -6,8 +6,11 @@
 - [X] Frustum culling.
 - [X] Diffuse, roughness textures.
 - [X] Point lights.
+- [X] MSAA.
+- [X] Anisotropic filtering.
 - [X] Environment mapping.
 - [X] Normal mapping.
+- [X] Post-processing pass.
 - [X] Gamma correction.
 - [X] HDR (tone mapping).
 
